@@ -9,6 +9,7 @@ import MenuPage from './pages/MenuPage';
 import TablesPage from './pages/TablesPage';
 import Orders from './pages/Orders';
 import Investment from './pages/Investment';
+import Staff from './pages/Staff';
 
 const App = () => {
   return (
@@ -47,7 +48,7 @@ const App = () => {
                 <Route path="/orders" element={<Orders />} />
                 <Route path="/investments" element={<Investment />} />
                 <Route path="/payroll" element={<div>Payroll Page - Coming Soon</div>} />
-                <Route path="/staff" element={<div>Staff Page - Coming Soon</div>} />
+                <Route path="/staff" element={<Staff />} />
               </Routes>
             </main>
           </div>
