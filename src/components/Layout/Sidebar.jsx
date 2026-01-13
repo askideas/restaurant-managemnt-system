@@ -18,7 +18,7 @@ const Sidebar = () => {
     { path: '/menu', icon: UtensilsCrossed, label: 'Menu' },
     { path: '/tables', icon: Grid3x3, label: 'Tables' },
     { path: '/orders', icon: ClipboardList, label: 'Orders' },
-    { path: '/investment', icon: Package, label: 'Investment' },
+    { path: '/investments', icon: Package, label: 'Investment' },
     { path: '/payroll', icon: DollarSign, label: 'Payroll' },
     { path: '/staff', icon: Users, label: 'Staff' },
   ];

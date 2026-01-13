@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
 import Button from './Button';
 
-const Modal = ({ isOpen, onClose, title, children, footer, size = 'md' }) => {
+const Modal = ({ open, onClose, title, children, footer, size = 'md', overlayClassName = '' }) => {
   const sizes = {
     sm: 'max-w-md',
     md: 'max-w-2xl',
@@ -11,7 +11,7 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'md' }) => {
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (open) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -19,15 +19,15 @@ const Modal = ({ isOpen, onClose, title, children, footer, size = 'md' }) => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
+  }, [open]);
 
-  if (!isOpen) return null;
+  if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+        className={`absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm ${overlayClassName}`}
         onClick={onClose}
       />
       
