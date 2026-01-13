@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../config/firebase';
-import { collection, query, orderBy, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, updateDoc, doc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 
 const Orders = () => {
@@ -9,28 +9,15 @@ const Orders = () => {
   const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
-    fetchOrders();
-    const interval = setInterval(fetchOrders, 5000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line
-  }, []);
-
-  const fetchOrders = async () => {
     setLoading(true);
-    try {
-      let q = query(
-        collection(db, 'orders'),
-        orderBy('createdAt', 'desc')
-      );
-      const querySnapshot = await getDocs(q);
+    const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       let data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setOrders(data);
-    } catch (error) {
-      setOrders([]);
-    } finally {
       setLoading(false);
-    }
-  };
+    });
+    return () => unsubscribe();
+  }, []);
 
   const markAsComplete = async (orderId) => {
     setUpdatingId(orderId);
@@ -60,7 +47,7 @@ const Orders = () => {
                   <span className="text-xs text-gray-500">{order.createdAt?.replace('T', ' ').slice(0, 16)}</span>
                   <span className="text-xs text-gray-700">Type: <span className="font-semibold">{order.type === 'dine-in' ? 'Dine In' : 'Take Away'}</span></span>
                   <span className="text-xs text-gray-700">Status: <span className={`font-semibold ${order.status === 'completed' ? 'text-green-600' : 'text-[#ec2b25]'}`}>{order.status?.charAt(0).toUpperCase() + order.status?.slice(1)}</span></span>
-                  {order.tableName && <span className="text-xs text-gray-700">Table: <span className="font-semibold">{order.tableName}</span></span>}
+                  {order.tableName && <span className="font-semibold text-[#ec2b25]">Table: <span className="font-bold">{order.tableName}</span></span>}
                   {order.customerName && <span className="text-xs text-gray-700">Customer: <span className="font-semibold">{order.customerName}</span></span>}
                 </div>
                 <button
