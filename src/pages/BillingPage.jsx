@@ -25,6 +25,7 @@ const BillingPage = () => {
   const [customerName, setCustomerName] = useState('');
   const [saving, setSaving] = useState(false);
   const [currentBillId, setCurrentBillId] = useState(null);
+  const [billType, setBillType] = useState('dine-in'); // 'dine-in' or 'take-away'
   
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
@@ -210,7 +211,7 @@ const BillingPage = () => {
 
   // Save bill
   const handleSaveBill = async () => {
-    if (!selectedTable) {
+    if (billType === 'dine-in' && !selectedTable) {
       toast.error('Please select a table');
       return;
     }
@@ -222,8 +223,6 @@ const BillingPage = () => {
     setSaving(true);
     try {
       const billData = {
-        tableId: selectedTable.id,
-        tableName: selectedTable.name,
         customerName: customerName || 'Guest',
         items: billItems.map(item => ({
           id: item.id,
@@ -236,10 +235,14 @@ const BillingPage = () => {
         subtotal: calculateTotal(),
         total: calculateTotal(),
         status: 'open',
+        type: billType,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-
+      if (billType === 'dine-in' && selectedTable) {
+        billData.tableId = selectedTable.id;
+        billData.tableName = selectedTable.name;
+      }
       if (currentBillId) {
         // Update existing bill
         await updateDoc(doc(db, 'bills', currentBillId), {
@@ -334,6 +337,7 @@ const BillingPage = () => {
     setCurrentBillId(null);
     setAmountReceived('');
     setPaymentMethod('cash');
+    setBillType('dine-in');
   };
 
   // Pagination
@@ -358,13 +362,43 @@ const BillingPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Billing</h1>
-        <button
-          onClick={() => setShowAddBill(!showAddBill)}
-          className="flex items-center space-x-2 px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{showAddBill ? 'Close' : 'Add Bill'}</span>
-        </button>
+        {showAddBill && (
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium">Bill For</span>
+              <button
+                type="button"
+                onClick={() => setBillType('dine-in')}
+                className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${billType === 'dine-in' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
+              >
+                Dine In
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillType('take-away')}
+                className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${billType === 'take-away' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
+              >
+                Take Away
+              </button>
+            </div>
+            <button
+              onClick={() => setShowAddBill(!showAddBill)}
+              className="flex items-center space-x-2 px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{showAddBill ? 'Close' : 'Add Bill'}</span>
+            </button>
+          </div>
+        )}
+        {!showAddBill && (
+          <button
+            onClick={() => setShowAddBill(!showAddBill)}
+            className="flex items-center space-x-2 px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{showAddBill ? 'Close' : 'Add Bill'}</span>
+          </button>
+        )}
       </div>
 
       {/* Add Bill Section */}
@@ -372,77 +406,93 @@ const BillingPage = () => {
         <div className="bg-white border border-gray-200 p-6">
           <div className="grid grid-cols-3 gap-6">
             {/* Column 1: Tables Selection */}
-            <div className="border-r border-gray-200 pr-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Select Table</h3>
-              
-              {/* Customer Name */}
-              <div className="mb-4">
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Customer Name (Optional)"
-                  className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm"
-                />
-              </div>
+            {billType === 'dine-in' && (
+              <div className="border-r border-gray-200 pr-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Select Table</h3>
+                
+                {/* Customer Name */}
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Customer Name (Optional)"
+                    className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm"
+                  />
+                </div>
 
-              {/* Floor Filter */}
-              <div className="mb-4">
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setSelectedFloor('all')}
-                    className={`px-3 py-1 text-sm border cursor-pointer ${
-                      selectedFloor === 'all' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'border-gray-200 hover:bg-gray-100'
-                    }`}
-                  >
-                    All
-                  </button>
-                  {floors.map(floor => (
+                {/* Floor Filter */}
+                <div className="mb-4">
+                  <div className="flex flex-wrap gap-2">
                     <button
-                      key={floor.id}
-                      onClick={() => setSelectedFloor(floor.id)}
+                      onClick={() => setSelectedFloor('all')}
                       className={`px-3 py-1 text-sm border cursor-pointer ${
-                        selectedFloor === floor.id ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'border-gray-200 hover:bg-gray-100'
+                        selectedFloor === 'all' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'border-gray-200 hover:bg-gray-100'
                       }`}
                     >
-                      {floor.shortCode}
+                      All
                     </button>
-                  ))}
+                    {floors.map(floor => (
+                      <button
+                        key={floor.id}
+                        onClick={() => setSelectedFloor(floor.id)}
+                        className={`px-3 py-1 text-sm border cursor-pointer ${
+                          selectedFloor === floor.id ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        {floor.shortCode}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              {/* Tables Grid */}
-              <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
-                {filteredTables.map(table => {
-                  const hasOpenBill = bills.some(bill => bill.tableId === table.id && bill.status === 'open');
-                  return (
-                    <button
-                      key={table.id}
-                      onClick={() => handleTableSelect(table)}
-                      className={`aspect-square border-2 flex items-center justify-center cursor-pointer transition-colors relative ${
-                        selectedTable?.id === table.id
-                          ? 'border-[#ec2b25] bg-[#ec2b25] text-white'
-                          : hasOpenBill
-                          ? 'border-orange-500 bg-orange-50'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <span className="font-mono font-bold">{table.shortCode}</span>
-                      {hasOpenBill && selectedTable?.id !== table.id && (
-                        <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              
-              {selectedTable && (
-                <div className="mt-4 p-3 bg-gray-50 border border-gray-200">
-                  <p className="text-sm text-gray-600">Selected Table:</p>
-                  <p className="font-medium text-gray-900">{selectedTable.name} ({selectedTable.shortCode})</p>
+                {/* Tables Grid */}
+                <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
+                  {filteredTables.map(table => {
+                    const hasOpenBill = bills.some(bill => bill.tableId === table.id && bill.status === 'open');
+                    return (
+                      <button
+                        key={table.id}
+                        onClick={() => handleTableSelect(table)}
+                        className={`aspect-square border-2 flex items-center justify-center cursor-pointer transition-colors relative ${
+                          selectedTable?.id === table.id
+                            ? 'border-[#ec2b25] bg-[#ec2b25] text-white'
+                            : hasOpenBill
+                            ? 'border-orange-500 bg-orange-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <span className="font-mono font-bold">{table.shortCode}</span>
+                        {hasOpenBill && selectedTable?.id !== table.id && (
+                          <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
-            </div>
+                
+                {selectedTable && (
+                  <div className="mt-4 p-3 bg-gray-50 border border-gray-200">
+                    <p className="text-sm text-gray-600">Selected Table:</p>
+                    <p className="font-medium text-gray-900">{selectedTable.name} ({selectedTable.shortCode})</p>
+                  </div>
+                )}
+              </div>
+            )}
+            {billType === 'take-away' && (
+              <div className="pr-6">
+                {/* Customer Name for Take Away */}
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Customer Name (Optional)"
+                    className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Column 2: Items Selection */}
             <div className="border-r border-gray-200 pr-6">
