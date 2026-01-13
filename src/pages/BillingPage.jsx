@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 const ITEMS_PER_PAGE = 24;
 
 const BillingPage = () => {
-  const [showAddBill, setShowAddBill] = useState(false);
+  const [showAddBill, setShowAddBill] = useState(true);
   const [floors, setFloors] = useState([]);
   const [tables, setTables] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -178,25 +178,31 @@ const BillingPage = () => {
 
   // Add item to bill
   const addItemToBill = (item) => {
-    const existingItem = billItems.find(bi => bi.id === item.id);
-    if (existingItem) {
-      setBillItems(billItems.map(bi => 
-        bi.id === item.id ? { ...bi, quantity: bi.quantity + 1 } : bi
-      ));
-    } else {
-      setBillItems([...billItems, { ...item, quantity: 1 }]);
-    }
+    setBillItems(prev => {
+      const existing = prev.find(bi => bi.id === item.id);
+      if (existing) {
+        return prev.map(bi =>
+          bi.id === item.id
+            ? { ...bi, quantity: bi.quantity + 1, pendingKotQty: (bi.pendingKotQty || 0) + 1 }
+            : bi
+        );
+      } else {
+        return [...prev, { ...item, quantity: 1, kotSent: false, pendingKotQty: 1 }];
+      }
+    });
   };
 
   // Update item quantity
   const updateQuantity = (itemId, delta) => {
-    setBillItems(billItems.map(bi => {
+    setBillItems(prevItems => prevItems.map(bi => {
       if (bi.id === itemId) {
-        const newQuantity = bi.quantity + delta;
-        return newQuantity > 0 ? { ...bi, quantity: newQuantity } : bi;
+        const newQty = bi.quantity + delta;
+        const newPending = (bi.pendingKotQty || 0) + (delta > 0 ? delta : Math.max(delta, -((bi.pendingKotQty || 0))));
+        if (newQty <= 0) return null;
+        return { ...bi, quantity: newQty, pendingKotQty: Math.max(0, newPending) };
       }
       return bi;
-    }).filter(bi => bi.quantity > 0));
+    }).filter(Boolean));
   };
 
   // Remove item from bill
@@ -222,16 +228,27 @@ const BillingPage = () => {
 
     setSaving(true);
     try {
+      // Only send pendingKotQty > 0
+      const itemsToOrder = billItems.filter(item => (item.pendingKotQty || 0) > 0);
+      if (itemsToOrder.length === 0) {
+        toast.error('No new items to send to KOT');
+        setSaving(false);
+        return;
+      }
+      // Mark these items as sent to KOT for the pending quantity
+      const updatedItems = billItems.map(item => {
+        if ((item.pendingKotQty || 0) > 0) {
+          return {
+            ...item,
+            kotSent: true,
+            pendingKotQty: 0
+          };
+        }
+        return item;
+      });
       const billData = {
         customerName: customerName || 'Guest',
-        items: billItems.map(item => ({
-          id: item.id,
-          name: item.name,
-          shortCode: item.shortCode,
-          price: item.price,
-          quantity: item.quantity,
-          type: item.type
-        })),
+        items: updatedItems,
         subtotal: calculateTotal(),
         total: calculateTotal(),
         status: 'open',
@@ -244,21 +261,38 @@ const BillingPage = () => {
         billData.tableName = selectedTable.name;
       }
       if (currentBillId) {
-        // Update existing bill
         await updateDoc(doc(db, 'bills', currentBillId), {
           ...billData,
           updatedAt: new Date().toISOString()
         });
-        toast.success('Bill updated successfully!');
+        toast.success('Order sent to KOT!');
       } else {
-        // Create new bill
         const docRef = await addDoc(collection(db, 'bills'), billData);
         setCurrentBillId(docRef.id);
-        toast.success('Bill saved successfully!');
+        toast.success('Order sent to KOT!');
       }
-      
+      setBillItems(updatedItems);
       fetchBills(1);
       fetchTotalBillsCount();
+
+      // --- Create order(s) in 'orders' collection for new KOT items ---
+      if (itemsToOrder.length > 0) {
+        const orderPayload = {
+          customerName: customerName || 'Guest',
+          items: itemsToOrder.map(i => ({ ...i, quantity: i.pendingKotQty || 0 })),
+          subtotal: itemsToOrder.reduce((sum, item) => sum + (item.price * (item.pendingKotQty || 0)), 0),
+          total: itemsToOrder.reduce((sum, item) => sum + (item.price * (item.pendingKotQty || 0)), 0),
+          status: 'open',
+          type: billType,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        if (billType === 'dine-in' && selectedTable) {
+          orderPayload.tableId = selectedTable.id;
+          orderPayload.tableName = selectedTable.name;
+        }
+        await addDoc(collection(db, 'orders'), orderPayload);
+      }
     } catch (error) {
       console.error('Error saving bill:', error);
       toast.error('Failed to save bill');
@@ -594,7 +628,9 @@ const BillingPage = () => {
                     <div key={item.id} className="p-3 border border-gray-200">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
-                          <p className="font-medium text-sm">{item.name}</p>
+                          <p className="font-medium text-sm">
+                            {item.name} {item.kotSent && <span className='ml-2 px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs'>KOT</span>}
+                          </p>
                           <p className="text-xs text-gray-500">₹{item.price} each</p>
                         </div>
                         <button
