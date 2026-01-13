@@ -3,10 +3,26 @@ import { db } from '../config/firebase';
 import { collection, query, orderBy, onSnapshot, updateDoc, doc } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 
+const STATUS_OPTIONS = [
+  { label: 'All', value: '' },
+  { label: 'Open', value: 'open' },
+  { label: 'Completed', value: 'completed' },
+];
+const TYPE_OPTIONS = [
+  { label: 'All', value: '' },
+  { label: 'Dine In', value: 'dine-in' },
+  { label: 'Take Away', value: 'take-away' },
+];
+
 const Orders = () => {
+  const today = new Date().toISOString().slice(0, 10);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
+  const [status, setStatus] = useState('');
+  const [type, setType] = useState('');
+  const [fromDate, setFromDate] = useState(today);
+  const [toDate, setToDate] = useState(today);
 
   useEffect(() => {
     setLoading(true);
@@ -28,18 +44,48 @@ const Orders = () => {
     setUpdatingId(null);
   };
 
+  // Filter orders client-side
+  const filteredOrders = orders.filter(order => {
+    const orderDate = order.createdAt?.slice(0, 10);
+    const statusMatch = !status || order.status === status;
+    const typeMatch = !type || order.type === type;
+    const fromMatch = !fromDate || orderDate >= fromDate;
+    const toMatch = !toDate || orderDate <= toDate;
+    return statusMatch && typeMatch && fromMatch && toMatch;
+  });
+
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Orders</h1>
       <div className="flex flex-wrap gap-4 mb-6 items-end">
+        <div>
+          <label className="block text-xs font-semibold mb-1 text-gray-700">Status</label>
+          <select value={status} onChange={e => setStatus(e.target.value)} className="border px-2 py-1 rounded text-sm">
+            {STATUS_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold mb-1 text-gray-700">Type</label>
+          <select value={type} onChange={e => setType(e.target.value)} className="border px-2 py-1 rounded text-sm">
+            {TYPE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold mb-1 text-gray-700">From</label>
+          <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="border px-2 py-1 rounded text-sm" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold mb-1 text-gray-700">To</label>
+          <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="border px-2 py-1 rounded text-sm" />
+        </div>
       </div>
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#ec2b25]" /></div>
-      ) : orders.length === 0 ? (
+      ) : filteredOrders.length === 0 ? (
         <div className="text-center text-gray-500 py-12">No orders found.</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {orders.map(order => (
+          {filteredOrders.map(order => (
             <div key={order.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
               <div className="flex flex-wrap justify-between items-center mb-2">
                 <div className="flex flex-col gap-1">
