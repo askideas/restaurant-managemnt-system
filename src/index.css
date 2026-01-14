@@ -31,3 +31,29 @@
 .no-transition {
   transition: none !important;
 }
+
+/* Thermal Print Styles */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .thermal-bill-container, .thermal-bill-container * {
+    visibility: visible !important;
+  }
+  .thermal-bill-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 80mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    background: white !important;
+    color: black !important;
+  }
+  
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+}

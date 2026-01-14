@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, ChevronDown, Search, Minus, X, Printer, Save, ChevronLeft, ChevronRight, CreditCard, Loader2 } from 'lucide-react';
 import { collection, addDoc, getDocs, query, orderBy, limit, startAfter, getCountFromServer, where, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import toast from 'react-hot-toast';
+import ThermalBill from '../components/Billing/ThermalBill';
 
 const ITEMS_PER_PAGE = 24;
 
@@ -37,6 +38,8 @@ const BillingPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [amountReceived, setAmountReceived] = useState('');
   const [processing, setProcessing] = useState(false);
+
+  const printRef = useRef();
 
   // Fetch all data
   useEffect(() => {
@@ -307,6 +310,24 @@ const BillingPage = () => {
       toast.error('No items to print');
       return;
     }
+    
+    // Prepare bill data for thermal printing
+    const billData = {
+      billNo: currentBillId ? currentBillId.slice(-6).toUpperCase() : 'NEW',
+      orderNo: currentBillId ? currentBillId.slice(-4).toUpperCase() : 'NEW',
+      kotNo: '1', // Placeholder or track KOT count
+      date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+      type: billType === 'dine-in' ? 'Dine In' : 'Take Away',
+      table: selectedTable ? selectedTable.shortCode : 'N/A',
+      user: 'Admin', // Dynamic user if available
+      items: billItems,
+      totalAmount: calculateTotal(),
+      totalQty: billItems.reduce((sum, item) => sum + item.quantity, 0)
+    };
+
+    // We use a small timeout to ensure state/DOM is ready if needed
+    // But since we are using window.print() and CSS visibility, it should be fine
     window.print();
   };
 
@@ -954,6 +975,24 @@ const BillingPage = () => {
           </div>
         </div>
       )}
+
+      {/* Thermal Bill for Printing */}
+      <ThermalBill
+        ref={printRef}
+        billData={{
+          billNo: currentBillId ? currentBillId.slice(-6).toUpperCase() : 'NEW',
+          orderNo: currentBillId ? currentBillId.slice(-4).toUpperCase() : 'NEW',
+          kotNo: '1',
+          date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+          time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+          type: billType === 'dine-in' ? 'Dine In' : 'Take Away',
+          table: selectedTable ? selectedTable.shortCode : 'N/A',
+          user: 'Admin',
+          items: billItems,
+          totalAmount: calculateTotal(),
+          totalQty: billItems.reduce((sum, item) => sum + item.quantity, 0)
+        }}
+      />
     </div>
   );
 };
