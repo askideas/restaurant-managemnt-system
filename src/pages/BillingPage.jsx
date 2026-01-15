@@ -1278,35 +1278,44 @@ const BillingPage = () => {
               </div>
 
               {/* Items List */}
-              <div ref={itemsListRef} className="grid grid-cols-2 sm:grid-cols-2 gap-2 max-h-64 md:max-h-96 overflow-y-auto">
+              <div ref={itemsListRef} className="grid grid-cols-1 sm:grid-cols-1 gap-2 max-h-80 md:max-h-[32rem] overflow-y-auto">
                 {filteredItems.map(item => {
                   const itemCategory = categories.find(cat => cat.id === item.categoryId);
                   return (
                     <button
                       key={item.id}
                       onClick={() => addItemToBill(item)}
-                      className="p-2 border border-gray-200 hover:border-[#ec2b25] hover:bg-gray-50 text-left cursor-pointer transition-colors flex flex-col"
+                      className="p-2 border border-gray-200 hover:border-[#ec2b25] hover:bg-gray-50 text-left cursor-pointer transition-colors flex flex-row items-center gap-3"
                     >
-                      {/* Image */}
-                      <div className="w-full aspect-square bg-gray-50 flex items-center justify-center text-4xl md:text-5xl mb-2"><img src={item.image} alt="" /></div>
-                      
-                      {/* Veg/Non-veg Symbol + Name */}
-                      <div className="flex items-start gap-1 mb-1">
-                        <div className={`w-3 h-3 md:w-4 md:h-4 border ${item.type === 'veg' ? 'border-green-600' : item.type === 'egg' ? 'border-yellow-600' : 'border-red-600'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                          <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${getFoodTypeColor(item.type)}`}></div>
-                        </div>
-                        <p className="font-medium text-xs md:text-sm leading-tight line-clamp-2">{item.name}</p>
+                      {/* Image - Left Side */}
+                      <div className="w-16 h-16 md:w-20 md:h-20 bg-gray-50 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-2xl">🍽️</span>
+                        )}
                       </div>
                       
-                      {/* Category */}
-                      {itemCategory && (
-                        <p className="text-xs text-gray-500 mb-1 truncate">
-                          {itemCategory.emoji} {itemCategory.name}
-                        </p>
-                      )}
-                      
-                      {/* Price */}
-                      <p className="font-bold text-sm md:text-base text-[#ec2b25] mt-auto">₹{item.price}</p>
+                      {/* Right Side - Details */}
+                      <div className="flex-1 min-w-0">
+                        {/* Veg/Non-veg Symbol + Name */}
+                        <div className="flex items-start gap-1 mb-1">
+                          <div className={`w-3 h-3 md:w-4 md:h-4 border ${item.type === 'veg' ? 'border-green-600' : item.type === 'egg' ? 'border-yellow-600' : 'border-red-600'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                            <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${getFoodTypeColor(item.type)}`}></div>
+                          </div>
+                          <p className="font-medium text-xs md:text-sm leading-tight line-clamp-2">{item.name}</p>
+                        </div>
+                        
+                        {/* Category */}
+                        {itemCategory && (
+                          <p className="text-xs text-gray-500 mb-1 truncate">
+                            {itemCategory.emoji} {itemCategory.name}
+                          </p>
+                        )}
+                        
+                        {/* Price */}
+                        <p className="font-bold text-sm md:text-base text-[#ec2b25]">₹{item.price}</p>
+                      </div>
                     </button>
                   );
                 })}
@@ -1336,7 +1345,7 @@ const BillingPage = () => {
                     <div key={item.id} className="p-2 md:p-3 border border-gray-200">
                       <div className="flex items-start gap-2 mb-2">
                         {/* Image */}
-                        <div className="text-2xl flex-shrink-0">{item.image || '🍽️'}</div>
+                        {/* <div className="text-2xl flex-shrink-0"><img src={item.image} alt="" /></div> */}
                         
                         {/* Item Details */}
                         <div className="flex-1 min-w-0">
@@ -1560,7 +1569,7 @@ const BillingPage = () => {
                         {bill.items.map((item, index) => (
                           <div key={index} className="flex items-center gap-2 text-xs md:text-sm bg-gray-50 p-1.5 md:p-2 border border-gray-200">
                             {/* Image */}
-                            <span className="text-base flex-shrink-0">{item.image || '🍽️'}</span>
+                            {/* <span className="text-base flex-shrink-0">{item.image || '🍽️'}</span> */}
                             {/* Veg/Non-veg Symbol */}
                             <div className={`w-3 h-3 border ${item.type === 'veg' ? 'border-green-600' : item.type === 'egg' ? 'border-yellow-600' : 'border-red-600'} flex items-center justify-center flex-shrink-0`}>
                               <div className={`w-1.5 h-1.5 rounded-full ${getFoodTypeColor(item.type)}`}></div>
@@ -1967,7 +1976,7 @@ const BillingPage = () => {
                     <div className="space-y-1.5 max-h-24 overflow-hidden">
                       {bill.items?.slice(0, 3).map((item, idx) => (
                         <div key={idx} className="flex items-center gap-1.5 text-xs">
-                          <span className="flex-shrink-0">{item.image || '🍽️'}</span>
+                          {/* <span className="flex-shrink-0">{item.image || '🍽️'}</span> */}
                           <div className={`w-2.5 h-2.5 border ${item.type === 'veg' ? 'border-green-600' : item.type === 'egg' ? 'border-yellow-600' : 'border-red-600'} flex items-center justify-center flex-shrink-0`}>
                             <div className={`w-1 h-1 rounded-full ${getFoodTypeColor(item.type)}`}></div>
                           </div>

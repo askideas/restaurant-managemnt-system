@@ -323,10 +323,10 @@ const Orders = () => {
                 ) : null}
 
                 {/* Total Amount */}
-                <div className="bg-[#ec2b25] text-white p-2 md:p-3 mb-3">
+                <div className="bg-gray-100 p-2 md:p-3 mb-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs md:text-sm">Total Amount:</span>
-                    <span className="text-base md:text-xl font-bold">₹{order.total?.toFixed(2)}</span>
+                    <span className="font-bold text-xs md:text-sm text-gray-700">Total Amount:</span>
+                    <span className="text-base md:text-xl font-bold text-gray-900">₹{order.total?.toFixed(2)}</span>
                   </div>
                 </div>
 
