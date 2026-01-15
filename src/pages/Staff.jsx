@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Loader2, SquarePen, Trash2, Eye, EyeOff } from 'lucide-react';
-import { collection, addDoc, query, orderBy, onSnapshot, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, setDoc, query, orderBy, onSnapshot, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import toast from 'react-hot-toast';
@@ -152,7 +152,8 @@ const Staff = () => {
         await updateDoc(doc(db, 'staff', editingStaff.id), staffData);
         toast.success('Staff updated');
       } else {
-        await addDoc(collection(db, 'staff'), {
+        // Use email as document ID
+        await setDoc(doc(db, 'staff', form.email), {
           ...staffData,
           createdAt: new Date().toISOString(),
         });
@@ -268,7 +269,7 @@ const Staff = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowModal(false)}>
+        <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowModal(false)}>
           <div className="bg-white w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">

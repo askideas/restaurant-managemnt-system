@@ -13,8 +13,11 @@ import {
   Settings
 } from 'lucide-react';
 import { MENU_ITEMS, RESTAURANT_NAME } from '../../data/menuData';
+import { useAuth } from '../../context/AuthContext';
 
 const Sidebar = () => {
+  const { hasAccess } = useAuth();
+  
   // Map icon names to icon components
   const iconMap = {
     LayoutDashboard,
@@ -29,6 +32,9 @@ const Sidebar = () => {
     Settings
   };
 
+  // Filter menu items based on user access
+  const accessibleMenuItems = MENU_ITEMS.filter(item => hasAccess(item.value));
+
   return (
     <div className="w-64 bg-white h-screen fixed left-0 top-0 flex flex-col border-r border-gray-200">
       {/* Logo */}
@@ -41,7 +47,7 @@ const Sidebar = () => {
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {MENU_ITEMS.map((item) => {
+        {accessibleMenuItems.map((item) => {
           const Icon = iconMap[item.icon];
           return (
             <NavLink

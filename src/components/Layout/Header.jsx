@@ -1,8 +1,17 @@
 import React from 'react';
-import { Bell, User, Search, Phone } from 'lucide-react';
+import { Bell, User, Search, Phone, LogOut } from 'lucide-react';
 import { RESTAURANT_NAME, SUPPORT_PHONE } from '../../data/menuData';
+import { useAuth } from '../../context/AuthContext';
 
 const Header = () => {
+  const { staffData, logout } = useAuth();
+
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to logout?')) {
+      logout();
+    }
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -36,10 +45,21 @@ const Header = () => {
           <button className="p-2 hover:bg-gray-100 transition-colors cursor-pointer">
             <Bell className="w-5 h-5 text-gray-700" />
           </button>
-          <button className="flex items-center space-x-2 p-2 hover:bg-gray-100 transition-colors cursor-pointer">
-            <User className="w-5 h-5 text-gray-700" />
-            <span className="text-sm font-medium text-gray-700">Admin</span>
-          </button>
+          <div className="flex items-center space-x-3 pl-3 border-l border-gray-200">
+            <div className="flex items-center space-x-2">
+              <User className="w-5 h-5 text-gray-700" />
+              <span className="text-sm font-medium text-gray-700">
+                {staffData?.name || 'User'}
+              </span>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="p-2 hover:bg-red-50 text-red-600 transition-colors cursor-pointer"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
     </header>
