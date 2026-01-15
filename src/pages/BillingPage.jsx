@@ -640,7 +640,7 @@ const BillingPage = () => {
       kotNo: '1', // Placeholder or track KOT count
       date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
       time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
-      type: billType === 'dine-in' ? 'Dine In' : 'Take Away',
+      type: billType === 'dine-in' ? 'Dine In' : billType === 'take-away' ? 'Take Away' : billType === 'swiggy' ? 'Swiggy' : 'Zomato',
       table: selectedTable ? selectedTable.shortCode : 'N/A',
       user: 'Admin', // Dynamic user if available
       items: billItems,
@@ -648,9 +648,10 @@ const BillingPage = () => {
       totalQty: billItems.reduce((sum, item) => sum + item.quantity, 0)
     };
 
-    // We use a small timeout to ensure state/DOM is ready if needed
-    // But since we are using window.print() and CSS visibility, it should be fine
-    window.print();
+    // Trigger print using the ThermalBill component
+    setTimeout(() => {
+      window.print();
+    }, 100);
   };
 
   // Handle payment
@@ -1172,7 +1173,8 @@ const BillingPage = () => {
                 </button>
                 <button
                   onClick={handlePrintBill}
-                  className="flex flex-col items-center justify-center px-2 py-2 md:py-3 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-colors cursor-pointer"
+                  disabled={!currentBillId}
+                  className="flex flex-col items-center justify-center px-2 py-2 md:py-3 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Printer className="w-4 md:w-5 h-4 md:h-5 mb-1" />
                   <span className="text-xs">Print</span>

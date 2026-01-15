@@ -36,27 +36,53 @@
 
 /* Thermal Print Styles */
 @media print {
+  /* Hide everything by default */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 80mm !important;
+    background: white !important;
+  }
+  
   body * {
     visibility: hidden !important;
   }
+  
+  /* Show only thermal bill */
   .thermal-bill-container, .thermal-bill-container * {
     visibility: visible !important;
   }
+  
   .thermal-bill-container {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
     margin: 0 !important;
-    padding: 4mm !important;
+    padding: 2mm !important;
     display: block !important;
     background: white !important;
     color: black !important;
+    font-size: 10px !important;
   }
   
+  /* Hide browser UI elements */
   @page {
     size: 80mm auto;
     margin: 0;
+  }
+  
+  /* Remove headers and footers */
+  @page :first {
+    margin-top: 0;
+  }
+  
+  @page :left {
+    margin-left: 0;
+  }
+  
+  @page :right {
+    margin-right: 0;
   }
 }
