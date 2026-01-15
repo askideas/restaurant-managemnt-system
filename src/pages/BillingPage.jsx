@@ -1278,7 +1278,7 @@ const BillingPage = () => {
               </div>
 
               {/* Items List */}
-              <div ref={itemsListRef} className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 md:max-h-96 overflow-y-auto">
+              <div ref={itemsListRef} className="grid grid-cols-2 sm:grid-cols-2 gap-2 max-h-64 md:max-h-96 overflow-y-auto">
                 {filteredItems.map(item => {
                   const itemCategory = categories.find(cat => cat.id === item.categoryId);
                   return (
@@ -1288,7 +1288,7 @@ const BillingPage = () => {
                       className="p-2 border border-gray-200 hover:border-[#ec2b25] hover:bg-gray-50 text-left cursor-pointer transition-colors flex flex-col"
                     >
                       {/* Image */}
-                      <div className="w-full aspect-square bg-gray-50 flex items-center justify-center text-4xl md:text-5xl mb-2">{item.image || '🍽️'}</div>
+                      <div className="w-full aspect-square bg-gray-50 flex items-center justify-center text-4xl md:text-5xl mb-2"><img src={item.image} alt="" /></div>
                       
                       {/* Veg/Non-veg Symbol + Name */}
                       <div className="flex items-start gap-1 mb-1">

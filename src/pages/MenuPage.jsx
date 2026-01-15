@@ -348,7 +348,7 @@ const MenuPage = () => {
                   </div>
                   
                   {/* Image */}
-                  <div className="w-full aspect-square bg-gray-50 flex items-center justify-center text-5xl md:text-6xl mb-3">{item.image || '🍽️'}</div>
+                  <div className="w-full aspect-square bg-gray-50 flex items-center justify-center text-5xl md:text-6xl mb-3"><img src={item.image} alt="" /></div>
                   
                   {/* Veg/Non-veg Symbol + Name */}
                   <div className="flex items-start gap-1.5 mb-2">
