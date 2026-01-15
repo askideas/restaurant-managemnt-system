@@ -4,6 +4,7 @@ import { collection, addDoc, getDocs, query, orderBy, limit, startAfter, getCoun
 import { db } from '../config/firebase';
 import toast from 'react-hot-toast';
 import ThermalBill from '../components/Billing/ThermalBill';
+import { printThermalBill, preConnectQZ } from '../utils/qzPrint';
 
 const ITEMS_PER_PAGE = 24;
 
@@ -71,6 +72,13 @@ const BillingPage = () => {
     fetchBills();
     fetchTotalBillsCount();
     fetchBillStats();
+    
+    // Pre-connect QZ Tray for fast printing
+    preConnectQZ().then(connected => {
+      if (connected) {
+        console.log('QZ Tray ready for fast printing');
+      }
+    });
   }, []);
 
   // Fetch bill statistics for today
@@ -723,32 +731,45 @@ const BillingPage = () => {
     }
   };
 
-  // Print bill
-  const handlePrintBill = () => {
+  // Print bill using QZ Tray (direct thermal printing - no modal)
+  // Falls back to browser print if QZ Tray is not available
+  const handlePrintBill = async () => {
     if (billItems.length === 0) {
       toast.error('No items to print');
       return;
     }
     
+    const subtotal = calculateSubtotal();
+    const total = calculateTotal();
+    
     // Prepare bill data for thermal printing
     const billData = {
       billNo: currentBillId ? currentBillId.slice(-6).toUpperCase() : 'NEW',
       orderNo: currentBillId ? currentBillId.slice(-4).toUpperCase() : 'NEW',
-      kotNo: '1', // Placeholder or track KOT count
+      kotNo: '1',
       date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
       time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
       type: billType === 'dine-in' ? 'Dine In' : billType === 'take-away' ? 'Take Away' : billType === 'swiggy' ? 'Swiggy' : 'Zomato',
       table: selectedTable ? selectedTable.shortCode : 'N/A',
-      user: 'Admin', // Dynamic user if available
+      user: 'Admin',
       items: billItems,
-      totalAmount: calculateTotal(),
+      subtotal: subtotal,
+      discountAmount: savedDiscount,
+      totalAmount: total,
       totalQty: billItems.reduce((sum, item) => sum + item.quantity, 0)
     };
 
-    // Trigger print using the ThermalBill component
-    setTimeout(() => {
-      window.print();
-    }, 100);
+    // Try QZ Tray first for direct printing, fallback to browser print
+    try {
+      console.log('Attempting QZ Tray print...');
+      await printThermalBill(billData);
+      toast.success('Printed via QZ Tray!', { duration: 1500 });
+    } catch (err) {
+      console.error('QZ Tray error:', err.message);
+      toast.error(`QZ Error: ${err.message}. Using browser print...`, { duration: 3000 });
+      // Fallback to browser print
+      setTimeout(() => window.print(), 500);
+    }
   };
 
   // Handle payment
