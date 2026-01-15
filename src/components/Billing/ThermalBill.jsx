@@ -13,6 +13,8 @@ const ThermalBill = React.forwardRef(({ billData }, ref) => {
     table = 'N/A',
     user = 'Admin',
     items = [],
+    subtotal = 0,
+    discountAmount = 0,
     totalAmount = 0,
     totalQty = 0
   } = billData;
@@ -66,8 +68,14 @@ const ThermalBill = React.forwardRef(({ billData }, ref) => {
       <div className="border-t border-black pt-1 mb-2">
         <div className="flex justify-between text-[9px]">
           <span>Total Items: {totalQty}</span>
-          <span className="font-bold">Total: ₹{totalAmount.toFixed(2)}</span>
+          <span className="font-bold">Subtotal: ₹{subtotal.toFixed(2)}</span>
         </div>
+        {discountAmount > 0 && (
+          <div className="flex justify-between text-[9px] text-green-700">
+            <span>Discount:</span>
+            <span>- ₹{discountAmount.toFixed(2)}</span>
+          </div>
+        )}
         <div className="flex justify-between font-black text-sm mt-1 pt-1 border-t border-dashed border-black">
           <span>GRAND TOTAL:</span>
           <span>₹{totalAmount.toFixed(2)}</span>
@@ -76,7 +84,6 @@ const ThermalBill = React.forwardRef(({ billData }, ref) => {
 
       <div className="text-center mt-3 pt-2 border-t border-double border-black text-[10px]">
         <p className="font-bold mb-1 italic">Thank you for visiting!</p>
-        <p>Powered by TMBI v7.3.77</p>
       </div>
     </div>
   );

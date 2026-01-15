@@ -29,6 +29,7 @@ const BillingPage = () => {
   const [currentOrderId, setCurrentOrderId] = useState(null);
   const [billType, setBillType] = useState('dine-in'); // 'dine-in', 'take-away', 'swiggy', 'zomato'
   const [discount, setDiscount] = useState(0);
+  const [savedDiscount, setSavedDiscount] = useState(0); // Discount saved to bill
   const [platformOrderId, setPlatformOrderId] = useState('');
   const [showPlatformModal, setShowPlatformModal] = useState(false);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
@@ -300,8 +301,7 @@ const BillingPage = () => {
       // Update bill in database if it exists
       if (currentBillId) {
         const subtotal = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const discountAmount = (subtotal * discount) / 100;
-        const total = subtotal - discountAmount;
+        const total = subtotal - savedDiscount;
         
         await updateDoc(doc(db, 'bills', currentBillId), {
           items: updatedItems,
@@ -323,11 +323,10 @@ const BillingPage = () => {
     }
   };
 
-  // Calculate total
+  // Calculate total (uses savedDiscount which is updated on save)
   const calculateTotal = () => {
     const subtotal = billItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const discountAmount = (subtotal * discount) / 100;
-    return subtotal - discountAmount;
+    return subtotal - savedDiscount;
   };
 
   const calculateSubtotal = () => {
@@ -400,7 +399,10 @@ const BillingPage = () => {
         return pendingQty !== 0;
       });
 
-      if (itemsWithChanges.length === 0) {
+      // Check if discount has changed
+      const discountChanged = discount !== savedDiscount;
+
+      if (itemsWithChanges.length === 0 && !discountChanged) {
         toast.error('No changes to save');
         setSaving(false);
         return;
@@ -411,9 +413,17 @@ const BillingPage = () => {
       const itemsToReduce = itemsWithChanges.filter(item => (item.pendingKotQty || 0) < 0);
 
       let updatedItemsWithOrders;
-      
+
+      // If only discount changed (no item changes), just reset pendingKotQty
+      if (itemsWithChanges.length === 0 && discountChanged) {
+        updatedItemsWithOrders = billItems.map(item => ({
+          ...item,
+          pendingKotQty: 0,
+          originalQuantity: item.quantity
+        }));
+      }
       // For Dine In: Create individual order for each item with positive changes, cancel orders for reduced items
-      if (billType === 'dine-in') {
+      else if (billType === 'dine-in') {
         updatedItemsWithOrders = await Promise.all(billItems.map(async (item) => {
           if ((item.pendingKotQty || 0) > 0) {
             // Add new quantity - Generate unique order ID for this item
@@ -564,7 +574,7 @@ const BillingPage = () => {
       }
 
       const subtotal = calculateSubtotal();
-      const total = calculateTotal();
+      const total = subtotal - discount; // Use new discount value for saving
       
       const billData = {
         customerName: customerName || 'Guest',
@@ -614,6 +624,7 @@ const BillingPage = () => {
       }
       
       setBillItems(updatedItemsWithOrders);
+      setSavedDiscount(discount); // Apply discount after save
       fetchBills(1);
       fetchTotalBillsCount();
       
@@ -768,6 +779,7 @@ const BillingPage = () => {
     setPaymentMethod('cash');
     setBillType('dine-in');
     setDiscount(0);
+    setSavedDiscount(0);
     setPlatformOrderId('');
   };
 
@@ -788,6 +800,7 @@ const BillingPage = () => {
     setCurrentOrderId(bill.orderId || null);
     setBillType(bill.type || 'dine-in');
     setDiscount(bill.discount || 0);
+    setSavedDiscount(bill.discount || 0);
     setPlatformOrderId(bill.platformOrderId || '');
 
     // Load table if dine-in
@@ -1128,21 +1141,30 @@ const BillingPage = () => {
                 
                 {/* Discount Input */}
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs md:text-sm text-gray-700">Discount (%):</span>
+                  <span className="text-xs md:text-sm text-gray-700">Discount (₹):</span>
                   <input
                     type="number"
                     min="0"
-                    max="100"
                     value={discount}
-                    onChange={(e) => setDiscount(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
-                    className="w-16 md:w-20 px-2 py-1 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-xs md:text-sm text-right"
+                    onChange={(e) => setDiscount(Math.max(0, parseFloat(e.target.value) || 0))}
+                    className="w-20 md:w-24 px-2 py-1 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-xs md:text-sm text-right"
+                    placeholder="0.00"
                   />
                 </div>
                 
-                {discount > 0 && (
+                {/* Show saved discount */}
+                {savedDiscount > 0 && (
                   <div className="flex items-center justify-between mb-2 text-xs md:text-sm text-green-600">
-                    <span>Discount Amount:</span>
-                    <span>- ₹{((calculateSubtotal() * discount) / 100).toFixed(2)}</span>
+                    <span>Applied Discount:</span>
+                    <span>- ₹{savedDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                
+                {/* Show pending discount indicator if different from saved */}
+                {discount !== savedDiscount && discount > 0 && (
+                  <div className="flex items-center justify-between mb-2 text-xs md:text-sm text-orange-500">
+                    <span>Pending Discount:</span>
+                    <span>- ₹{discount.toFixed(2)} (save to apply)</span>
                   </div>
                 )}
                 
@@ -1632,6 +1654,8 @@ const BillingPage = () => {
           table: selectedTable ? selectedTable.shortCode : 'N/A',
           user: 'Admin',
           items: billItems,
+          subtotal: calculateSubtotal(),
+          discountAmount: savedDiscount,
           totalAmount: calculateTotal(),
           totalQty: billItems.reduce((sum, item) => sum + item.quantity, 0)
         }}
