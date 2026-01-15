@@ -220,8 +220,45 @@ const BillingPage = () => {
   };
 
   // Remove item from bill
-  const removeItemFromBill = (itemId) => {
+  const removeItemFromBill = async (itemId) => {
+    const itemToRemove = billItems.find(bi => bi.id === itemId);
+    
+    if (itemToRemove && itemToRemove.orderIds && itemToRemove.orderIds.length > 0) {
+      // Cancel all orders associated with this item
+      try {
+        await Promise.all(itemToRemove.orderIds.map(async (order) => {
+          await updateDoc(doc(db, 'orders', order.orderDocId), {
+            status: 'cancelled',
+            updatedAt: new Date().toISOString()
+          });
+        }));
+        toast.success('Item and associated orders cancelled');
+      } catch (error) {
+        console.error('Error cancelling orders:', error);
+        toast.error('Failed to cancel orders');
+      }
+    }
+    
     setBillItems(billItems.filter(bi => bi.id !== itemId));
+    
+    // Update bill in database if it exists
+    if (currentBillId) {
+      try {
+        const updatedItems = billItems.filter(bi => bi.id !== itemId);
+        const subtotal = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const discountAmount = (subtotal * discount) / 100;
+        const total = subtotal - discountAmount;
+        
+        await updateDoc(doc(db, 'bills', currentBillId), {
+          items: updatedItems,
+          subtotal: subtotal,
+          total: total,
+          updatedAt: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Error updating bill:', error);
+      }
+    }
   };
 
   // Calculate total
@@ -295,24 +332,54 @@ const BillingPage = () => {
         setSaving(false);
         return;
       }
-      // Mark these items as sent to KOT for the pending quantity
-      const updatedItems = billItems.map(item => {
+
+      // Create individual order for each item with pending quantity
+      const updatedItemsWithOrders = await Promise.all(billItems.map(async (item) => {
         if ((item.pendingKotQty || 0) > 0) {
+          // Generate unique order ID for this item
+          const orderId = await generateOrderId();
+          
+          // Create order for this specific item
+          const orderPayload = {
+            orderId: orderId,
+            billDocId: currentBillId || 'pending',
+            customerName: customerName || 'Guest',
+            itemId: item.id,
+            itemName: item.name,
+            itemPrice: item.price,
+            quantity: item.pendingKotQty,
+            subtotal: item.price * item.pendingKotQty,
+            total: item.price * item.pendingKotQty,
+            status: 'pending',
+            type: billType,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          
+          if ((billType === 'dine-in') && selectedTable) {
+            orderPayload.tableId = selectedTable.id;
+            orderPayload.tableName = selectedTable.name;
+          }
+          
+          const orderDoc = await addDoc(collection(db, 'orders'), orderPayload);
+          
+          // Return item with order ID attached
           return {
             ...item,
             kotSent: true,
-            pendingKotQty: 0
+            pendingKotQty: 0,
+            orderIds: [...(item.orderIds || []), { orderId: orderId, orderDocId: orderDoc.id, quantity: item.pendingKotQty }]
           };
         }
         return item;
-      });
+      }));
 
       const subtotal = calculateSubtotal();
       const total = calculateTotal();
       
       const billData = {
         customerName: customerName || 'Guest',
-        items: updatedItems,
+        items: updatedItemsWithOrders,
         subtotal: subtotal,
         discount: discount,
         total: total,
@@ -340,41 +407,22 @@ const BillingPage = () => {
         const docRef = await addDoc(collection(db, 'bills'), billData);
         billDocId = docRef.id;
         setCurrentBillId(docRef.id);
+        
+        // Update all orders with the actual bill doc ID
+        const orderUpdates = updatedItemsWithOrders
+          .filter(item => item.orderIds && item.orderIds.length > 0)
+          .flatMap(item => item.orderIds.map(order => order.orderDocId));
+        
+        await Promise.all(orderUpdates.map(orderDocId => 
+          updateDoc(doc(db, 'orders', orderDocId), { billDocId: docRef.id })
+        ));
       }
       
-      setBillItems(updatedItems);
+      setBillItems(updatedItemsWithOrders);
       fetchBills(1);
       fetchTotalBillsCount();
-
-      // --- Create order(s) in 'orders' collection for new KOT items ---
-      if (itemsToOrder.length > 0) {
-        const orderId = await generateOrderId();
-        const orderPayload = {
-          orderId: orderId,
-          billDocId: billDocId,
-          customerName: customerName || 'Guest',
-          items: itemsToOrder.map(i => ({ ...i, quantity: i.pendingKotQty || 0 })),
-          subtotal: itemsToOrder.reduce((sum, item) => sum + (item.price * (item.pendingKotQty || 0)), 0),
-          total: itemsToOrder.reduce((sum, item) => sum + (item.price * (item.pendingKotQty || 0)), 0),
-          status: 'pending',
-          type: billType,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        if ((billType === 'dine-in') && selectedTable) {
-          orderPayload.tableId = selectedTable.id;
-          orderPayload.tableName = selectedTable.name;
-        }
-        const orderDoc = await addDoc(collection(db, 'orders'), orderPayload);
-        setCurrentOrderId(orderDoc.id);
-        
-        // Update bill with latest orderId
-        await updateDoc(doc(db, 'bills', billDocId), {
-          orderId: orderDoc.id
-        });
-        
-        toast.success('Order sent to KOT!');
-      }
+      
+      toast.success(`${itemsToOrder.length} order(s) sent to KOT!`);
     } catch (error) {
       console.error('Error saving bill:', error);
       toast.error('Failed to save bill');
@@ -470,34 +518,43 @@ const BillingPage = () => {
 
   // Cancel order
   const handleCancelOrder = async () => {
-    if (!currentOrderId) {
-      toast.error('No active order to cancel');
+    if (!currentBillId) {
+      toast.error('No active bill to cancel');
       return;
     }
 
-    if (!confirm('Are you sure you want to cancel this order?')) {
+    if (!confirm('Are you sure you want to cancel all orders for this bill?')) {
       return;
     }
 
     try {
-      await updateDoc(doc(db, 'orders', currentOrderId), {
+      // Get all order IDs from bill items
+      const allOrderIds = billItems
+        .filter(item => item.orderIds && item.orderIds.length > 0)
+        .flatMap(item => item.orderIds.map(order => order.orderDocId));
+
+      // Cancel all orders
+      if (allOrderIds.length > 0) {
+        await Promise.all(allOrderIds.map(orderDocId =>
+          updateDoc(doc(db, 'orders', orderDocId), {
+            status: 'cancelled',
+            updatedAt: new Date().toISOString()
+          })
+        ));
+      }
+
+      // Update bill status
+      await updateDoc(doc(db, 'bills', currentBillId), {
         status: 'cancelled',
         updatedAt: new Date().toISOString()
       });
 
-      if (currentBillId) {
-        await updateDoc(doc(db, 'bills', currentBillId), {
-          status: 'cancelled',
-          updatedAt: new Date().toISOString()
-        });
-      }
-
-      toast.success('Order cancelled successfully');
+      toast.success('All orders cancelled successfully');
       resetBillForm();
       fetchBills(1);
     } catch (error) {
-      console.error('Error cancelling order:', error);
-      toast.error('Failed to cancel order');
+      console.error('Error cancelling orders:', error);
+      toast.error('Failed to cancel orders');
     }
   };
 
@@ -823,6 +880,15 @@ const BillingPage = () => {
                             {item.name} {item.kotSent && <span className='ml-2 px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs'>KOT</span>}
                           </p>
                           <p className="text-xs text-gray-500">₹{item.price} each</p>
+                          {item.orderIds && item.orderIds.length > 0 && (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {item.orderIds.map((order, idx) => (
+                                <span key={idx} className="text-xs font-mono bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                                  {order.orderId}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         <button
                           onClick={() => removeItemFromBill(item.id)}
@@ -924,13 +990,13 @@ const BillingPage = () => {
               </div>
               
               {/* Cancel Order Button */}
-              {currentOrderId && (
+              {currentBillId && billItems.some(item => item.orderIds && item.orderIds.length > 0) && (
                 <button
                   onClick={handleCancelOrder}
                   className="w-full mt-2 flex items-center justify-center space-x-2 px-4 py-2 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
-                  <span className="text-sm font-medium">Cancel Order</span>
+                  <span className="text-sm font-medium">Cancel All Orders</span>
                 </button>
               )}
             </div>
