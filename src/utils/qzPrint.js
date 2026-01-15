@@ -159,10 +159,10 @@ export const generateThermalCommands = (billData) => {
   // Build command string directly (faster than array)
   let cmd = INIT;
   
-  // Header - Restaurant Name (split into lines if needed)
-  cmd += ALIGN_CENTER + BOLD_ON + DOUBLE_WIDTH;
+  // Header - Restaurant Name (normal size, bold)
+  cmd += ALIGN_CENTER + BOLD_ON;
   cmd += 'HOTEL NELLORE ROYAL' + LF;
-  cmd += NORMAL_SIZE + BOLD_ON + 'MULTICUSINE RESTAURANT' + LF;
+  cmd += 'MULTICUSINE RESTAURANT' + LF;
   cmd += BOLD_OFF + LF;
   
   // Address (split into multiple lines)

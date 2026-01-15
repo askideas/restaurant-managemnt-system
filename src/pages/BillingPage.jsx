@@ -27,7 +27,8 @@ const BillingPage = () => {
   const [billItems, setBillItems] = useState([]);
   const [customerName, setCustomerName] = useState('');
   const [saving, setSaving] = useState(false);
-  const [currentBillId, setCurrentBillId] = useState(null);
+  const [currentBillId, setCurrentBillId] = useState(null); // Firebase doc ID
+  const [displayBillId, setDisplayBillId] = useState(null); // Human-readable bill ID like #B-15012026-1
   const [currentOrderId, setCurrentOrderId] = useState(null);
   const [billType, setBillType] = useState('dine-in'); // 'dine-in', 'take-away', 'swiggy', 'zomato'
   const [discount, setDiscount] = useState(0);
@@ -262,12 +263,16 @@ const BillingPage = () => {
         setBillItems(billData.items);
         setCustomerName(billData.customerName);
         setCurrentBillId(billDoc.id);
+        setDisplayBillId(billData.billId || null); // Load the display bill ID
+        setDiscount(billData.discount || 0);
+        setSavedDiscount(billData.discount || 0);
         toast.success('Loaded open bill for this table');
       } else {
         // No open bill, reset form
         setBillItems([]);
         setCustomerName('');
         setCurrentBillId(null);
+        setDisplayBillId(null);
       }
     } catch (error) {
       console.error('Error loading open bill:', error);
@@ -705,6 +710,7 @@ const BillingPage = () => {
         const docRef = await addDoc(collection(db, 'bills'), billData);
         billDocId = docRef.id;
         setCurrentBillId(docRef.id);
+        setDisplayBillId(billId); // Set the display bill ID
         
         // Update all orders with the actual bill doc ID
         const orderUpdates = updatedItemsWithOrders
@@ -744,8 +750,8 @@ const BillingPage = () => {
     
     // Prepare bill data for thermal printing
     const billData = {
-      billNo: currentBillId ? currentBillId.slice(-6).toUpperCase() : 'NEW',
-      orderNo: currentBillId ? currentBillId.slice(-4).toUpperCase() : 'NEW',
+      billNo: displayBillId || 'NEW',
+      orderNo: displayBillId ? displayBillId.replace('#B-', '#O-') : 'NEW',
       kotNo: '1',
       date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
       time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
