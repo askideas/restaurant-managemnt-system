@@ -27,16 +27,16 @@ const InstallButton = ({ variant = 'default', showStatus = true }) => {
   }
 
   // Already installed status
-  if (isInstalled) {
-    if (!showStatus) return null;
-    return (
-      <div className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-700 rounded-lg">
-        <Check className="w-4 h-4" />
-        <span className="text-sm font-medium">Installed</span>
-        {!isOnline && <WifiOff className="w-4 h-4 text-orange-500" title="Offline" />}
-      </div>
-    );
-  }
+//   if (isInstalled) {
+//     if (!showStatus) return null;
+//     return (
+//       <div className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-700 rounded-lg">
+//         <Check className="w-4 h-4" />
+//         <span className="text-sm font-medium">Installed</span>
+//         {!isOnline && <WifiOff className="w-4 h-4 text-orange-500" title="Offline" />}
+//       </div>
+//     );
+//   }
 
   // Install button - shown when app can be installed
   if (isInstallable) {

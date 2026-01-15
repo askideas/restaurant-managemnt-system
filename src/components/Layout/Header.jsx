@@ -29,7 +29,7 @@ const Header = ({ onMenuClick }) => {
         </div>
 
         {/* Search Bar - Hidden on small mobile */}
-        <div className="hidden sm:flex items-center flex-1 max-w-xs lg:max-w-md mx-2 md:mx-6">
+        {/* <div className="hidden sm:flex items-center flex-1 max-w-xs lg:max-w-md mx-2 md:mx-6">
           <div className="relative w-full">
             <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 w-3 md:w-4 h-3 md:h-4 text-gray-400" />
             <input
@@ -38,7 +38,7 @@ const Header = ({ onMenuClick }) => {
               className="w-full pl-7 md:pl-10 pr-2 md:pr-4 py-1.5 md:py-2 border border-gray-200 focus:outline-none focus:border-primary text-xs md:text-sm"
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Right Section */}
         <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
@@ -56,9 +56,9 @@ const Header = ({ onMenuClick }) => {
           <InstallButton variant="default" showStatus={true} />
           
           {/* Notifications - Hidden on mobile */}
-          <button className="hidden md:block p-2 hover:bg-gray-100 transition-colors cursor-pointer">
+          {/* <button className="hidden md:block p-2 hover:bg-gray-100 transition-colors cursor-pointer">
             <Bell className="w-4 md:w-5 h-4 md:h-5 text-gray-700" />
-          </button>
+          </button> */}
           
           {/* User Section */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-3 pl-2 md:pl-3 border-l border-gray-200">
