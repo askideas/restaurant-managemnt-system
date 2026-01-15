@@ -5,8 +5,7 @@ export const MENU_ITEMS = [
   { label: 'Tables', value: 'tables', path: '/tables', icon: 'Grid3x3' },
   { label: 'Orders', value: 'orders', path: '/orders', icon: 'ChefHat' },
   { label: 'Investment', value: 'investment', path: '/investment', icon: 'Package' },
-  { label: 'Staff', value: 'staff', path: '/staff', icon: 'Users' },
-  { label: 'Settings', value: 'settings', path: '/settings', icon: 'Settings' },
+  { label: 'Staff', value: 'staff', path: '/staff', icon: 'Users' }
 ];
 
 export const RESTAURANT_NAME = 'NOVA Restaurant';
