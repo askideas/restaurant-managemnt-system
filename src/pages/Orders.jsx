@@ -204,22 +204,55 @@ const Orders = () => {
                       <span className="font-medium text-gray-900">{order.customerName}</span>
                     </div>
                   )}
+                  {order.platformOrderId && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">{order.platform === 'swiggy' ? 'Swiggy' : 'Zomato'} Order:</span>
+                      <span className="font-mono font-bold text-gray-900">{order.platformOrderId}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Item Details */}
-                <div className="bg-gray-50 border border-gray-200 p-3 mb-3">
-                  <div className="font-bold text-gray-900 mb-2">{order.itemName}</div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div>
-                      <span className="text-gray-600">Qty:</span>
-                      <span className="ml-2 font-bold text-gray-900">{order.quantity}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Price:</span>
-                      <span className="ml-2 font-medium text-gray-900">₹{order.itemPrice}</span>
+                {order.itemName ? (
+                  // Single item order (Dine In)
+                  <div className="bg-gray-50 border border-gray-200 p-3 mb-3">
+                    <div className="font-bold text-gray-900 mb-2">{order.itemName}</div>
+                    <div className="flex items-center justify-between text-sm">
+                      <div>
+                        <span className="text-gray-600">Qty:</span>
+                        <span className="ml-2 font-bold text-gray-900">{order.quantity}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Price:</span>
+                        <span className="ml-2 font-medium text-gray-900">₹{order.itemPrice}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : order.items ? (
+                  // Multiple items order (Takeaway, Swiggy, Zomato)
+                  <div className="bg-gray-50 border border-gray-200 p-3 mb-3 space-y-2">
+                    <div className="font-bold text-gray-900 mb-2">Items ({order.items.length})</div>
+                    {order.items.map((item, index) => (
+                      <div key={index} className="border-b border-gray-200 pb-2 last:border-0 last:pb-0">
+                        <div className="font-medium text-gray-900 text-sm mb-1">{item.itemName}</div>
+                        <div className="flex items-center justify-between text-xs">
+                          <div>
+                            <span className="text-gray-600">Qty:</span>
+                            <span className="ml-2 font-bold text-gray-900">{item.quantity}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Price:</span>
+                            <span className="ml-2 font-medium text-gray-900">₹{item.itemPrice}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Total:</span>
+                            <span className="ml-2 font-bold text-gray-900">₹{(item.itemPrice * item.quantity).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
 
                 {/* Total Amount */}
                 <div className="bg-[#ec2b25] text-white p-3 mb-3">

@@ -29,6 +29,8 @@ const BillingPage = () => {
   const [currentOrderId, setCurrentOrderId] = useState(null);
   const [billType, setBillType] = useState('dine-in'); // 'dine-in', 'take-away', 'swiggy', 'zomato'
   const [discount, setDiscount] = useState(0);
+  const [platformOrderId, setPlatformOrderId] = useState('');
+  const [showPlatformModal, setShowPlatformModal] = useState(false);
   
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
@@ -219,19 +221,60 @@ const BillingPage = () => {
     if (!itemToRemove) return;
 
     try {
-      // Cancel all orders associated with this item
-      if (itemToRemove.orderIds && itemToRemove.orderIds.length > 0) {
-        await Promise.all(itemToRemove.orderIds.map(async (order) => {
-          await updateDoc(doc(db, 'orders', order.orderDocId), {
-            status: 'cancelled',
-            updatedAt: new Date().toISOString()
-          });
-        }));
-      }
-      
       // Remove item from bill items
       const updatedItems = billItems.filter(bi => bi.id !== itemId);
       setBillItems(updatedItems);
+
+      // Handle order updates
+      if (itemToRemove.orderIds && itemToRemove.orderIds.length > 0) {
+        // For dine-in orders: each item has its own order, so cancel them
+        if (billType === 'dine-in') {
+          await Promise.all(itemToRemove.orderIds.map(async (order) => {
+            await updateDoc(doc(db, 'orders', order.orderDocId), {
+              status: 'cancelled',
+              updatedAt: new Date().toISOString()
+            });
+          }));
+        } else {
+          // For takeaway/Swiggy/Zomato: ONE order with multiple items
+          // Update the order's items array instead of cancelling
+          const orderDocId = itemToRemove.orderIds[0]?.orderDocId;
+          if (orderDocId) {
+            // Get remaining items that have the same order
+            const remainingItemsInOrder = updatedItems.filter(item => 
+              item.orderIds?.some(o => o.orderDocId === orderDocId)
+            );
+
+            if (remainingItemsInOrder.length > 0) {
+              // Update order with remaining items
+              const orderItems = remainingItemsInOrder.map(item => ({
+                itemId: item.id,
+                itemName: item.name,
+                itemPrice: item.price,
+                quantity: item.quantity
+              }));
+              
+              const orderTotal = remainingItemsInOrder.reduce(
+                (sum, item) => sum + (item.price * item.quantity), 
+                0
+              );
+
+              await updateDoc(doc(db, 'orders', orderDocId), {
+                items: orderItems,
+                subtotal: orderTotal,
+                total: orderTotal,
+                updatedAt: new Date().toISOString()
+              });
+            } else {
+              // No items left, cancel the order
+              await updateDoc(doc(db, 'orders', orderDocId), {
+                status: 'cancelled',
+                updatedAt: new Date().toISOString()
+              });
+            }
+          }
+        }
+      }
       
       // Update bill in database if it exists
       if (currentBillId) {
@@ -316,6 +359,13 @@ const BillingPage = () => {
       toast.error('Please select a table');
       return;
     }
+    
+    // Check for Swiggy/Zomato order ID requirement
+    if ((billType === 'swiggy' || billType === 'zomato') && !platformOrderId.trim()) {
+      setShowPlatformModal(true);
+      return;
+    }
+    
     if (billItems.length === 0) {
       toast.error('Please add items to the bill');
       return;
@@ -331,46 +381,95 @@ const BillingPage = () => {
         return;
       }
 
-      // Create individual order for each item with pending quantity
-      const updatedItemsWithOrders = await Promise.all(billItems.map(async (item) => {
-        if ((item.pendingKotQty || 0) > 0) {
-          // Generate unique order ID for this item
-          const orderId = await generateOrderId();
-          
-          // Create order for this specific item
-          const orderPayload = {
-            orderId: orderId,
-            billDocId: currentBillId || 'pending',
-            customerName: customerName || 'Guest',
+      let updatedItemsWithOrders;
+      
+      // For Dine In: Create individual order for each item
+      if (billType === 'dine-in') {
+        updatedItemsWithOrders = await Promise.all(billItems.map(async (item) => {
+          if ((item.pendingKotQty || 0) > 0) {
+            // Generate unique order ID for this item
+            const orderId = await generateOrderId();
+            
+            // Create order for this specific item
+            const orderPayload = {
+              orderId: orderId,
+              billDocId: currentBillId || 'pending',
+              customerName: customerName || 'Guest',
+              itemId: item.id,
+              itemName: item.name,
+              itemPrice: item.price,
+              quantity: item.pendingKotQty,
+              subtotal: item.price * item.pendingKotQty,
+              total: item.price * item.pendingKotQty,
+              status: 'pending',
+              type: billType,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+            
+            if (selectedTable) {
+              orderPayload.tableId = selectedTable.id;
+              orderPayload.tableName = selectedTable.name;
+            }
+            
+            const orderDoc = await addDoc(collection(db, 'orders'), orderPayload);
+            
+            // Return item with order ID attached
+            return {
+              ...item,
+              kotSent: true,
+              pendingKotQty: 0,
+              orderIds: [...(item.orderIds || []), { orderId: orderId, orderDocId: orderDoc.id, quantity: item.pendingKotQty }]
+            };
+          }
+          return item;
+        }));
+      } else {
+        // For Takeaway, Swiggy, Zomato: Create ONE order with all items
+        const orderId = await generateOrderId();
+        
+        // Calculate total for all items
+        const orderTotal = itemsToOrder.reduce((sum, item) => sum + (item.price * item.pendingKotQty), 0);
+        
+        const orderPayload = {
+          orderId: orderId,
+          billDocId: currentBillId || 'pending',
+          customerName: customerName || 'Guest',
+          items: itemsToOrder.map(item => ({
             itemId: item.id,
             itemName: item.name,
             itemPrice: item.price,
-            quantity: item.pendingKotQty,
-            subtotal: item.price * item.pendingKotQty,
-            total: item.price * item.pendingKotQty,
-            status: 'pending',
-            type: billType,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
-          
-          if ((billType === 'dine-in') && selectedTable) {
-            orderPayload.tableId = selectedTable.id;
-            orderPayload.tableName = selectedTable.name;
-          }
-          
-          const orderDoc = await addDoc(collection(db, 'orders'), orderPayload);
-          
-          // Return item with order ID attached
-          return {
-            ...item,
-            kotSent: true,
-            pendingKotQty: 0,
-            orderIds: [...(item.orderIds || []), { orderId: orderId, orderDocId: orderDoc.id, quantity: item.pendingKotQty }]
-          };
+            quantity: item.pendingKotQty
+          })),
+          subtotal: orderTotal,
+          total: orderTotal,
+          status: 'pending',
+          type: billType,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
+        // Add platform order ID for Swiggy/Zomato
+        if (billType === 'swiggy' || billType === 'zomato') {
+          orderPayload.platformOrderId = platformOrderId;
+          orderPayload.platform = billType;
         }
-        return item;
-      }));
+        
+        const orderDoc = await addDoc(collection(db, 'orders'), orderPayload);
+        
+        // Update all items with the same order ID
+        updatedItemsWithOrders = billItems.map(item => {
+          if ((item.pendingKotQty || 0) > 0) {
+            return {
+              ...item,
+              kotSent: true,
+              pendingKotQty: 0,
+              orderIds: [...(item.orderIds || []), { orderId: orderId, orderDocId: orderDoc.id, quantity: item.pendingKotQty }]
+            };
+          }
+          return item;
+        });
+      }
 
       const subtotal = calculateSubtotal();
       const total = calculateTotal();
@@ -386,6 +485,12 @@ const BillingPage = () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
+      
+      // Add platform order ID for Swiggy/Zomato
+      if ((billType === 'swiggy' || billType === 'zomato') && platformOrderId) {
+        billData.platformOrderId = platformOrderId;
+        billData.platform = billType;
+      }
       
       if ((billType === 'dine-in') && selectedTable) {
         billData.tableId = selectedTable.id;
@@ -570,6 +675,7 @@ const BillingPage = () => {
     setPaymentMethod('cash');
     setBillType('dine-in');
     setDiscount(0);
+    setPlatformOrderId('');
   };
 
   // Load bill for editing
@@ -589,6 +695,7 @@ const BillingPage = () => {
     setCurrentOrderId(bill.orderId || null);
     setBillType(bill.type || 'dine-in');
     setDiscount(bill.discount || 0);
+    setPlatformOrderId(bill.platformOrderId || '');
 
     // Load table if dine-in
     if (bill.type === 'dine-in' && bill.tableId) {
@@ -1168,6 +1275,80 @@ const BillingPage = () => {
           </>
         )}
       </div>
+
+      {/* Platform Order ID Modal (Swiggy/Zomato) */}
+      {showPlatformModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                {billType === 'swiggy' ? 'Swiggy' : 'Zomato'} Order Details
+              </h2>
+              <p className="text-sm text-gray-600">
+                Please enter the order details
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {/* Platform Order ID */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {billType === 'swiggy' ? 'Swiggy' : 'Zomato'} Order ID <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={platformOrderId}
+                  onChange={(e) => setPlatformOrderId(e.target.value)}
+                  placeholder={`Enter ${billType === 'swiggy' ? 'Swiggy' : 'Zomato'} order ID`}
+                  className="w-full px-3 py-2 border-2 border-gray-200 focus:outline-none focus:border-[#ec2b25]"
+                  autoFocus
+                />
+              </div>
+
+              {/* Customer Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Customer Name <span className="text-gray-400">(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Enter customer name"
+                  className="w-full px-3 py-2 border-2 border-gray-200 focus:outline-none focus:border-[#ec2b25]"
+                />
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowPlatformModal(false);
+                  setPlatformOrderId('');
+                }}
+                className="flex-1 px-4 py-2 border-2 border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (!platformOrderId.trim()) {
+                    toast.error(`Please enter ${billType === 'swiggy' ? 'Swiggy' : 'Zomato'} order ID`);
+                    return;
+                  }
+                  setShowPlatformModal(false);
+                  handleSaveBill();
+                }}
+                disabled={!platformOrderId.trim()}
+                className="flex-1 px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12520] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Payment Modal */}
       {showPaymentModal && (
