@@ -100,7 +100,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                   disabled={loading}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -112,7 +112,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#ec2b25] text-white py-3 font-semibold hover:bg-[#d12620] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-[#ec2b25] text-white py-3 font-semibold hover:bg-[#d12620] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

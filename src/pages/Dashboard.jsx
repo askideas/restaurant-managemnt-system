@@ -294,7 +294,7 @@ const Dashboard = () => {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-3 border-2 border-gray-200 px-4 py-2 bg-white text-gray-900 hover:border-[#ec2b25] focus:outline-none focus:border-[#ec2b25] min-w-[200px]"
+              className="flex items-center gap-3 border-2 border-gray-200 px-4 py-2 bg-white text-gray-900 hover:border-[#ec2b25] focus:outline-none focus:border-[#ec2b25] min-w-[200px] cursor-pointer"
             >
               <Calendar className="w-5 h-5 text-gray-600" />
               <span className="flex-1 text-left">{getFilterDisplayName()}</span>
@@ -308,7 +308,7 @@ const Dashboard = () => {
                   <button
                     key={option.value}
                     onClick={() => handleFilterChange(option.value)}
-                    className={`w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors ${
+                    className={`w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors cursor-pointer ${
                       dateFilter === option.value ? 'bg-[#ec2b25] text-white hover:bg-[#d12520]' : 'text-gray-900'
                     }`}
                   >

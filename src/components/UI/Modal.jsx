@@ -27,7 +27,8 @@ const Modal = ({ open, onClose, title, children, footer, size = 'md', overlayCla
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div 
-        className={`absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm ${overlayClassName}`}
+        className={`absolute inset-0 backdrop-blur-sm ${overlayClassName}`}
+        style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
         onClick={onClose}
       />
       
@@ -38,7 +39,7 @@ const Modal = ({ open, onClose, title, children, footer, size = 'md', overlayCla
           <h2 className="text-xl font-bold text-gray-900">{title}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-1 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
           >
             <X size={24} />
           </button>

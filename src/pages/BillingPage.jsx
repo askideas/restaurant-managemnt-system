@@ -833,28 +833,28 @@ const BillingPage = () => {
               <button
                 type="button"
                 onClick={() => setBillType('dine-in')}
-                className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${billType === 'dine-in' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
+                className={`px-3 py-1 rounded border text-sm font-medium transition-colors cursor-pointer ${billType === 'dine-in' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
               >
                 Dine In
               </button>
               <button
                 type="button"
                 onClick={() => setBillType('take-away')}
-                className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${billType === 'take-away' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
+                className={`px-3 py-1 rounded border text-sm font-medium transition-colors cursor-pointer ${billType === 'take-away' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
               >
                 Take Away
               </button>
               <button
                 type="button"
                 onClick={() => setBillType('swiggy')}
-                className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${billType === 'swiggy' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
+                className={`px-3 py-1 rounded border text-sm font-medium transition-colors cursor-pointer ${billType === 'swiggy' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
               >
                 Swiggy
               </button>
               <button
                 type="button"
                 onClick={() => setBillType('zomato')}
-                className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${billType === 'zomato' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
+                className={`px-3 py-1 rounded border text-sm font-medium transition-colors cursor-pointer ${billType === 'zomato' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
               >
                 Zomato
               </button>
@@ -1371,7 +1371,7 @@ const BillingPage = () => {
 
       {/* Remove Item Confirmation Modal */}
       {showRemoveModal && itemToRemove && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <div className="mb-4">
               <h2 className="text-xl font-bold text-gray-900 mb-2">
@@ -1399,7 +1399,7 @@ const BillingPage = () => {
                   setShowRemoveModal(false);
                   setItemToRemove(null);
                 }}
-                className="flex-1 px-4 py-2 border-2 border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors"
+                className="flex-1 px-4 py-2 border-2 border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -1409,7 +1409,7 @@ const BillingPage = () => {
                   setShowRemoveModal(false);
                   setItemToRemove(null);
                 }}
-                className="flex-1 px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors"
+                className="flex-1 px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors cursor-pointer"
               >
                 Yes, Remove
               </button>
@@ -1494,7 +1494,7 @@ const BillingPage = () => {
 
       {/* Payment Modal */}
       {showPaymentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
           <div className="bg-white w-full max-w-md mx-4">
             <div className="p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Complete Payment</h2>

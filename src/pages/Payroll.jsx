@@ -283,7 +283,7 @@ const Payroll = () => {
 
       {/* Add Payroll Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
           <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* Modal Header */}
             <div className="p-6 border-b-2 border-gray-200 flex items-center justify-between">
@@ -295,7 +295,7 @@ const Payroll = () => {
               </div>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-gray-100 transition-colors"
+                className="p-2 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 <X className="w-6 h-6 text-gray-600" />
               </button>
@@ -342,13 +342,13 @@ const Payroll = () => {
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowModal(false)}
-                  className="px-6 py-2 border-2 border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors"
+                  className="px-6 py-2 border-2 border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSavePayroll}
-                  className="px-6 py-2 bg-[#ec2b25] text-white hover:bg-[#d12520] transition-colors"
+                  className="px-6 py-2 bg-[#ec2b25] text-white hover:bg-[#d12520] transition-colors cursor-pointer"
                 >
                   Save Payroll
                 </button>

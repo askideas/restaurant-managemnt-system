@@ -269,7 +269,7 @@ const Staff = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowModal(false)}>
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} onClick={() => setShowModal(false)}>
           <div className="bg-white w-full max-w-3xl mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
