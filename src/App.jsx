@@ -46,9 +46,11 @@ const App = () => {
                 <Route path="/menu" element={<MenuPage />} />
                 <Route path="/tables" element={<TablesPage />} />
                 <Route path="/orders" element={<Orders />} />
-                <Route path="/investments" element={<Investment />} />
-                <Route path="/payroll" element={<div>Payroll Page - Coming Soon</div>} />
+                <Route path="/kitchen" element={<div>Kitchen Page - Coming Soon</div>} />
+                <Route path="/reports" element={<div>Reports Page - Coming Soon</div>} />
+                <Route path="/investment" element={<Investment />} />
                 <Route path="/staff" element={<Staff />} />
+                <Route path="/settings" element={<div>Settings Page - Coming Soon</div>} />
               </Routes>
             </main>
           </div>

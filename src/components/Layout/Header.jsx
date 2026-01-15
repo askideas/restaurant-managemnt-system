@@ -1,12 +1,18 @@
 import React from 'react';
-import { Bell, User, Search } from 'lucide-react';
+import { Bell, User, Search, Phone } from 'lucide-react';
+import { RESTAURANT_NAME, SUPPORT_PHONE } from '../../data/menuData';
 
 const Header = () => {
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
+        {/* Restaurant Name */}
+        <div className="flex items-center space-x-4">
+          <h1 className="text-xl font-bold text-[#ec2b25]">{RESTAURANT_NAME}</h1>
+        </div>
+
         {/* Search Bar */}
-        <div className="flex items-center flex-1 max-w-md">
+        <div className="flex items-center flex-1 max-w-md mx-6">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -19,6 +25,14 @@ const Header = () => {
 
         {/* Right Section */}
         <div className="flex items-center space-x-4">
+          <a 
+            href={`tel:${SUPPORT_PHONE}`}
+            className="flex items-center space-x-2 px-3 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer"
+          >
+            <Phone className="w-4 h-4" />
+            <span className="text-sm font-medium">Support</span>
+            <span className="text-sm">{SUPPORT_PHONE}</span>
+          </a>
           <button className="p-2 hover:bg-gray-100 transition-colors cursor-pointer">
             <Bell className="w-5 h-5 text-gray-700" />
           </button>

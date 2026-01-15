@@ -4,17 +4,7 @@ import { collection, addDoc, query, orderBy, onSnapshot, doc, deleteDoc, updateD
 import { db } from '../config/firebase';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import toast from 'react-hot-toast';
-
-const SIDEBAR_ITEMS = [
-  { label: 'Billing', value: 'billing' },
-  { label: 'Menu', value: 'menu' },
-  { label: 'Tables', value: 'tables' },
-  { label: 'Orders', value: 'orders' },
-  { label: 'Kitchen', value: 'kitchen' },
-  { label: 'Reports', value: 'reports' },
-  { label: 'Investment', value: 'investment' },
-  { label: 'Staff', value: 'staff' },
-];
+import { MENU_ITEMS } from '../data/menuData';
 
 const Staff = () => {
   const [staffList, setStaffList] = useState([]);
@@ -35,12 +25,25 @@ const Staff = () => {
 
   useEffect(() => {
     setLoading(true);
-    const q = query(collection(db, 'staff'), orderBy('createdAt', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
-      setStaffList(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    try {
+      const q = query(collection(db, 'staff'), orderBy('createdAt', 'desc'));
+      const unsub = onSnapshot(q, 
+        (snap) => {
+          setStaffList(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          setLoading(false);
+        },
+        (error) => {
+          console.error('Error fetching staff:', error);
+          toast.error('Failed to load staff data');
+          setLoading(false);
+        }
+      );
+      return () => unsub();
+    } catch (error) {
+      console.error('Error setting up staff listener:', error);
+      toast.error('Failed to initialize staff page');
       setLoading(false);
-    });
-    return () => unsub();
+    }
   }, []);
 
   const handleOpenModal = (staff = null) => {
@@ -242,7 +245,7 @@ const Staff = () => {
                       <div className="flex flex-wrap gap-1 mt-1">
                         {staff.access.map((item, idx) => (
                           <span key={idx} className="px-2 py-0.5 bg-gray-100 text-gray-700 text-xs">
-                            {SIDEBAR_ITEMS.find(si => si.value === item)?.label || item}
+                            {MENU_ITEMS.find(mi => mi.value === item)?.label || item}
                           </span>
                         ))}
                       </div>
@@ -358,7 +361,7 @@ const Staff = () => {
               <div>
                 <h3 className="text-sm font-bold text-gray-900 mb-3 pb-2 border-b border-gray-200">Access Permissions</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {SIDEBAR_ITEMS.map(item => (
+                  {MENU_ITEMS.filter(item => item.value !== 'dashboard').map(item => (
                     <label key={item.value} className="flex items-center gap-2 cursor-pointer px-3 py-2 border border-gray-200 hover:bg-gray-50">
                       <input
                         type="checkbox"
