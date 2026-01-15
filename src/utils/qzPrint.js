@@ -130,6 +130,12 @@ export const generateThermalCommands = (billData) => {
     totalQty = 0
   } = billData;
 
+  // Restaurant details from env
+  const restaurantName = import.meta.env.VITE_RESTAURANT_NAME || 'RESTAURANT';
+  const restaurantMobile = import.meta.env.VITE_RESTAURANT_MOBILE || '';
+  const restaurantAddress = import.meta.env.VITE_RESTAURANT_ADDRESS || '';
+  const restaurantGST = import.meta.env.VITE_RESTAURANT_GST || '';
+
   // ESC/POS commands
   const ESC = '\x1B';
   const GS = '\x1D';
@@ -153,13 +159,26 @@ export const generateThermalCommands = (billData) => {
   // Build command string directly (faster than array)
   let cmd = INIT;
   
-  // Header
+  // Header - Restaurant Name (split into lines if needed)
   cmd += ALIGN_CENTER + BOLD_ON + DOUBLE_WIDTH;
-  cmd += 'SAI RAM MALLAREDDY' + LF;
-  cmd += NORMAL_SIZE + 'FAMILY DHABA & RESTAURANT' + LF;
-  cmd += BOLD_OFF + 'RTC Colony, Bujja Bujja Nellore' + LF;
-  cmd += 'Rural, AP 524004' + LF;
-  cmd += 'Ph: 9177154024 | GST: 37BOMPR8412B1ZA' + LF + LF;
+  cmd += 'HOTEL NELLORE ROYAL' + LF;
+  cmd += NORMAL_SIZE + BOLD_ON + 'MULTICUSINE RESTAURANT' + LF;
+  cmd += BOLD_OFF + LF;
+  
+  // Address (split into multiple lines)
+  cmd += 'Opp-Anjaneya swamy temple,' + LF;
+  cmd += 'Beside brahmaiah college,' + LF;
+  cmd += 'North Rajupalem Highway,' + LF;
+  cmd += 'Kodavalur Mandal, Nellore Dist.' + LF;
+  
+  // Mobile
+  cmd += `Ph: ${restaurantMobile}` + LF;
+  
+  // GST - only print if available
+  if (restaurantGST && restaurantGST.trim() !== '') {
+    cmd += `GST: ${restaurantGST}` + LF;
+  }
+  cmd += LF;
   
   // Date/Time and Type
   cmd += ALIGN_LEFT;

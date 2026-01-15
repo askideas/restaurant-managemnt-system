@@ -19,13 +19,21 @@ const ThermalBill = React.forwardRef(({ billData }, ref) => {
     totalQty = 0
   } = billData;
 
+  // Restaurant details from env
+  const restaurantName = import.meta.env.VITE_RESTAURANT_NAME || 'RESTAURANT';
+  const restaurantMobile = import.meta.env.VITE_RESTAURANT_MOBILE || '';
+  const restaurantAddress = import.meta.env.VITE_RESTAURANT_ADDRESS || '';
+  const restaurantGST = import.meta.env.VITE_RESTAURANT_GST || '';
+
   return (
     <div ref={ref} className="thermal-bill-container p-2 bg-white text-black font-mono text-[9px] uppercase leading-tight w-full mx-auto print:block hidden">
       <div className="text-center mb-3">
-        <h1 className="font-bold text-sm mb-1">Sai Ram MallaReddy Family Dhaba and Restaurant</h1>
-        <p className="text-[10px]">RTC Colony, Bujja Bujja Nellore Rural, AP 524004, India</p>
-        <p className="text-[10px]">Contact No: 9177154024</p>
-        <p className="text-[10px]">GST: 37BOMPR8412B1ZA</p>
+        <h1 className="font-bold text-sm mb-1">{restaurantName}</h1>
+        <p className="text-[10px]">{restaurantAddress}</p>
+        <p className="text-[10px]">Contact No: {restaurantMobile}</p>
+        {restaurantGST && restaurantGST.trim() !== '' && (
+          <p className="text-[10px]">GST: {restaurantGST}</p>
+        )}
       </div>
 
       <div className="flex justify-between mb-1 text-[10px]">
