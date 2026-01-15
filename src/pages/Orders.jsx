@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../config/firebase';
 import { collection, query, orderBy, onSnapshot, updateDoc, doc } from 'firebase/firestore';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle, Clock } from 'lucide-react';
 
 const STATUS_OPTIONS = [
   { label: 'All', value: '' },
-  { label: 'Open', value: 'open' },
+  { label: 'Pending', value: 'pending' },
   { label: 'Completed', value: 'completed' },
+  { label: 'Cancelled', value: 'cancelled' },
 ];
 const TYPE_OPTIONS = [
   { label: 'All', value: '' },
   { label: 'Dine In', value: 'dine-in' },
   { label: 'Take Away', value: 'take-away' },
+  { label: 'Swiggy', value: 'swiggy' },
+  { label: 'Zomato', value: 'zomato' },
 ];
 
 const Orders = () => {
@@ -38,7 +41,10 @@ const Orders = () => {
   const markAsComplete = async (orderId) => {
     setUpdatingId(orderId);
     try {
-      await updateDoc(doc(db, 'orders', orderId), { status: 'completed' });
+      await updateDoc(doc(db, 'orders', orderId), { 
+        status: 'completed',
+        updatedAt: new Date().toISOString()
+      });
       setOrders(orders => orders.map(o => o.id === orderId ? { ...o, status: 'completed' } : o));
     } catch {}
     setUpdatingId(null);
@@ -54,70 +60,205 @@ const Orders = () => {
     return statusMatch && typeMatch && fromMatch && toMatch;
   });
 
+  const getOrderTypeColor = (type) => {
+    switch(type) {
+      case 'dine-in': return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'take-away': return 'bg-purple-100 text-purple-800 border-purple-300';
+      case 'swiggy': return 'bg-orange-100 text-orange-800 border-orange-300';
+      case 'zomato': return 'bg-red-100 text-red-800 border-red-300';
+      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  };
+
+  const getOrderTypeLabel = (type) => {
+    switch(type) {
+      case 'dine-in': return 'Dine In';
+      case 'take-away': return 'Take Away';
+      case 'swiggy': return 'Swiggy';
+      case 'zomato': return 'Zomato';
+      default: return type;
+    }
+  };
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Orders</h1>
-      <div className="flex flex-wrap gap-4 mb-6 items-end">
-        <div>
-          <label className="block text-xs font-semibold mb-1 text-gray-700">Status</label>
-          <select value={status} onChange={e => setStatus(e.target.value)} className="border px-2 py-1 rounded text-sm">
-            {STATUS_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold mb-1 text-gray-700">Type</label>
-          <select value={type} onChange={e => setType(e.target.value)} className="border px-2 py-1 rounded text-sm">
-            {TYPE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-xs font-semibold mb-1 text-gray-700">From</label>
-          <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="border px-2 py-1 rounded text-sm" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold mb-1 text-gray-700">To</label>
-          <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="border px-2 py-1 rounded text-sm" />
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 text-sm">
+            <span className="text-gray-600">Total Orders:</span>
+            <span className="font-bold text-[#ec2b25]">{filteredOrders.length}</span>
+          </div>
         </div>
       </div>
+
+      {/* Filters */}
+      <div className="bg-white border border-gray-200 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <select 
+              value={status} 
+              onChange={e => setStatus(e.target.value)} 
+              className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm"
+            >
+              {STATUS_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+            <select 
+              value={type} 
+              onChange={e => setType(e.target.value)} 
+              className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm"
+            >
+              {TYPE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">From Date</label>
+            <input 
+              type="date" 
+              value={fromDate} 
+              onChange={e => setFromDate(e.target.value)} 
+              className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">To Date</label>
+            <input 
+              type="date" 
+              value={toDate} 
+              onChange={e => setToDate(e.target.value)} 
+              className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Orders List */}
       {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#ec2b25]" /></div>
+        <div className="bg-white border border-gray-200 p-12">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="w-8 h-8 animate-spin text-[#ec2b25]" />
+            <p className="text-gray-500">Loading orders...</p>
+          </div>
+        </div>
       ) : filteredOrders.length === 0 ? (
-        <div className="text-center text-gray-500 py-12">No orders found.</div>
+        <div className="bg-white border border-gray-200 p-12">
+          <div className="text-center text-gray-500">No orders found.</div>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredOrders.map(order => (
-            <div key={order.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
-              <div className="flex flex-wrap justify-between items-center mb-2">
-                <div className="flex flex-col gap-1">
-                  <span className="font-semibold text-gray-900">Order #{order.id.slice(-6).toUpperCase()}</span>
-                  <span className="text-xs text-gray-500">{order.createdAt?.replace('T', ' ').slice(0, 16)}</span>
-                  <span className="text-xs text-gray-700">Type: <span className="font-semibold">{order.type === 'dine-in' ? 'Dine In' : 'Take Away'}</span></span>
-                  <span className="text-xs text-gray-700">Status: <span className={`font-semibold ${order.status === 'completed' ? 'text-green-600' : 'text-[#ec2b25]'}`}>{order.status?.charAt(0).toUpperCase() + order.status?.slice(1)}</span></span>
-                  {order.tableName && <span className="font-semibold text-[#ec2b25]">Table: <span className="font-bold">{order.tableName}</span></span>}
-                  {order.customerName && <span className="text-xs text-gray-700">Customer: <span className="font-semibold">{order.customerName}</span></span>}
+            <div key={order.id} className="border-2 border-gray-200 bg-white hover:shadow-lg transition-all">
+              {/* Header */}
+              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-3 py-1 text-xs font-bold border ${getOrderTypeColor(order.type)}`}>
+                      {getOrderTypeLabel(order.type)}
+                    </span>
+                  </div>
+                  <span className={`px-2 py-1 text-xs font-bold uppercase ${
+                    order.status === 'completed' 
+                      ? 'bg-green-600 text-white' 
+                      : order.status === 'cancelled'
+                      ? 'bg-gray-500 text-white'
+                      : 'bg-orange-500 text-white'
+                  }`}>
+                    {order.status}
+                  </span>
                 </div>
+                <div className="space-y-1">
+                  {order.orderId && (
+                    <div className="text-xs font-mono font-bold text-[#ec2b25]">
+                      {order.orderId}
+                    </div>
+                  )}
+                  {order.billDocId && order.billDocId !== 'pending' && (
+                    <div className="text-xs text-gray-600">
+                      Bill: <span className="font-mono font-semibold">{order.billDocId.slice(-6).toUpperCase()}</span>
+                    </div>
+                  )}
+                  <div className="text-xs text-gray-500">
+                    {new Date(order.createdAt).toLocaleString('en-IN')}
+                  </div>
+                </div>
+              </div>
+
+              {/* Body */}
+              <div className="px-4 py-3">
+                {/* Customer & Table Info */}
+                <div className="mb-3 space-y-1">
+                  {order.tableName && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Table:</span>
+                      <span className="font-bold text-gray-900">{order.tableName}</span>
+                    </div>
+                  )}
+                  {order.customerName && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Customer:</span>
+                      <span className="font-medium text-gray-900">{order.customerName}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Item Details */}
+                <div className="bg-gray-50 border border-gray-200 p-3 mb-3">
+                  <div className="font-bold text-gray-900 mb-2">{order.itemName}</div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div>
+                      <span className="text-gray-600">Qty:</span>
+                      <span className="ml-2 font-bold text-gray-900">{order.quantity}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Price:</span>
+                      <span className="ml-2 font-medium text-gray-900">₹{order.itemPrice}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total Amount */}
+                <div className="bg-[#ec2b25] text-white p-3 mb-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold">Total Amount:</span>
+                    <span className="text-xl font-bold">₹{order.total?.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {/* Action Button */}
                 <button
-                  disabled={order.status === 'completed' || updatingId === order.id}
+                  disabled={order.status === 'completed' || order.status === 'cancelled' || updatingId === order.id}
                   onClick={() => markAsComplete(order.id)}
-                  className={`px-4 py-2 rounded font-semibold text-sm transition-colors ${order.status === 'completed' ? 'bg-green-100 text-green-600 cursor-not-allowed' : 'bg-[#ec2b25] text-white hover:bg-[#d12620]'} ${updatingId === order.id ? 'opacity-50' : ''}`}
+                  className={`w-full px-4 py-2 font-semibold text-sm transition-colors flex items-center justify-center space-x-2 ${
+                    order.status === 'completed' 
+                      ? 'bg-green-100 text-green-700 cursor-not-allowed' 
+                      : order.status === 'cancelled'
+                      ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                      : 'bg-[#ec2b25] text-white hover:bg-[#d12620] cursor-pointer'
+                  } ${updatingId === order.id ? 'opacity-50' : ''}`}
                 >
-                  {order.status === 'completed' ? 'Completed' : updatingId === order.id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Mark as Complete'}
+                  {order.status === 'completed' ? (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Completed</span>
+                    </>
+                  ) : order.status === 'cancelled' ? (
+                    <>
+                      <span>Cancelled</span>
+                    </>
+                  ) : updatingId === order.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Clock className="w-4 h-4" />
+                      <span>Mark as Complete</span>
+                    </>
+                  )}
                 </button>
-              </div>
-              <div className="mt-2">
-                <div className="font-semibold text-gray-800 mb-1">Items:</div>
-                <ul className="list-disc pl-5 text-sm text-gray-700">
-                  {order.items?.map(item => (
-                    <li key={item.id}>
-                      <span className="font-bold text-[#ec2b25]">{item.name}</span> x {item.quantity} <span className="text-xs text-gray-500">({item.price} each)</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-4 text-sm">
-                {order.tableName && <span className="font-semibold text-[#ec2b25]">Table: <span className="font-bold">{order.tableName}</span></span>}
-                <span className="font-semibold">Subtotal: <span className="text-gray-900">₹{order.subtotal}</span></span>
-                <span className="font-semibold">Total: <span className="text-gray-900">₹{order.total}</span></span>
               </div>
             </div>
           ))}
