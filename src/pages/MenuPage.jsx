@@ -318,14 +318,15 @@ const MenuPage = () => {
               : 'No items in this category.'}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
             {filteredItems.map((item) => {
               const category = categories.find(cat => cat.id === item.categoryId);
               return (
                 <div
                   key={item.id}
-                  className="border border-gray-200 p-3 md:p-4 hover:border-gray-300 transition-colors relative"
+                  className="border border-gray-200 p-3 md:p-4 hover:border-[#ec2b25] transition-colors relative flex flex-col"
                 >
+                  {/* Edit/Delete Buttons */}
                   <div className="absolute top-2 right-2 flex items-center space-x-1">
                     <button
                       onClick={() => {
@@ -345,24 +346,31 @@ const MenuPage = () => {
                       <Trash2 className="w-3 md:w-4 h-3 md:h-4" />
                     </button>
                   </div>
-                  <div className="flex items-start justify-between mb-2 pr-12">
-                    <div className="flex items-center space-x-1 md:space-x-2 min-w-0 flex-1">
-                      <div className={`w-2 md:w-3 h-2 md:h-3 rounded-full flex-shrink-0 ${getFoodTypeColor(item.type)}`}></div>
-                      <h3 className="font-medium text-sm md:text-base text-gray-900 truncate">{item.name}</h3>
+                  
+                  {/* Image */}
+                  <div className="w-full aspect-square bg-gray-50 flex items-center justify-center text-5xl md:text-6xl mb-3">{item.image || '🍽️'}</div>
+                  
+                  {/* Veg/Non-veg Symbol + Name */}
+                  <div className="flex items-start gap-1.5 mb-2">
+                    <div className={`w-4 h-4 border-2 ${item.type === 'veg' ? 'border-green-600' : item.type === 'egg' ? 'border-yellow-600' : 'border-red-600'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <div className={`w-2 h-2 rounded-full ${getFoodTypeColor(item.type)}`}></div>
                     </div>
+                    <h3 className="font-medium text-sm md:text-base text-gray-900 leading-tight line-clamp-2">{item.name}</h3>
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono text-gray-500">{item.shortCode}</span>
-                      <span className="text-base md:text-lg font-bold text-gray-900">₹{item.price}</span>
+                  
+                  {/* Category */}
+                  {category && (
+                    <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
+                      <span>{category.emoji}</span>
+                      <span className="truncate">{category.name}</span>
                     </div>
-                    {category && (
-                      <div className="flex items-center space-x-1 text-xs md:text-sm text-gray-500">
-                        <span>{category.emoji}</span>
-                        <span className="truncate">{category.name}</span>
-                      </div>
-                    )}
-                  </div>
+                  )}
+                  
+                  {/* Short Code */}
+                  <p className="text-xs font-mono text-gray-400 mb-2">{item.shortCode}</p>
+                  
+                  {/* Price */}
+                  <p className="text-lg md:text-xl font-bold text-[#ec2b25] mt-auto">₹{item.price}</p>
                 </div>
               );
             })}

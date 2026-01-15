@@ -1278,25 +1278,38 @@ const BillingPage = () => {
               </div>
 
               {/* Items List */}
-              <div ref={itemsListRef} className="space-y-2 max-h-64 md:max-h-96 overflow-y-auto">
-                {filteredItems.map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => addItemToBill(item)}
-                    className="w-full p-2 md:p-3 border border-gray-200 hover:border-[#ec2b25] hover:bg-gray-50 text-left cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className={`w-2 h-2 rounded-full ${getFoodTypeColor(item.type)}`}></div>
-                        <div>
-                          <p className="font-medium text-sm">{item.name}</p>
-                          <p className="text-xs text-gray-500 font-mono">{item.shortCode}</p>
+              <div ref={itemsListRef} className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 md:max-h-96 overflow-y-auto">
+                {filteredItems.map(item => {
+                  const itemCategory = categories.find(cat => cat.id === item.categoryId);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => addItemToBill(item)}
+                      className="p-2 border border-gray-200 hover:border-[#ec2b25] hover:bg-gray-50 text-left cursor-pointer transition-colors flex flex-col"
+                    >
+                      {/* Image */}
+                      <div className="w-full aspect-square bg-gray-50 flex items-center justify-center text-4xl md:text-5xl mb-2">{item.image || '🍽️'}</div>
+                      
+                      {/* Veg/Non-veg Symbol + Name */}
+                      <div className="flex items-start gap-1 mb-1">
+                        <div className={`w-3 h-3 md:w-4 md:h-4 border ${item.type === 'veg' ? 'border-green-600' : item.type === 'egg' ? 'border-yellow-600' : 'border-red-600'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                          <div className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full ${getFoodTypeColor(item.type)}`}></div>
                         </div>
+                        <p className="font-medium text-xs md:text-sm leading-tight line-clamp-2">{item.name}</p>
                       </div>
-                      <span className="font-bold text-sm">₹{item.price}</span>
-                    </div>
-                  </button>
-                ))}
+                      
+                      {/* Category */}
+                      {itemCategory && (
+                        <p className="text-xs text-gray-500 mb-1 truncate">
+                          {itemCategory.emoji} {itemCategory.name}
+                        </p>
+                      )}
+                      
+                      {/* Price */}
+                      <p className="font-bold text-sm md:text-base text-[#ec2b25] mt-auto">₹{item.price}</p>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -1321,12 +1334,22 @@ const BillingPage = () => {
                 ) : (
                   billItems.map(item => (
                     <div key={item.id} className="p-2 md:p-3 border border-gray-200">
-                      <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start gap-2 mb-2">
+                        {/* Image */}
+                        <div className="text-2xl flex-shrink-0">{item.image || '🍽️'}</div>
+                        
+                        {/* Item Details */}
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-xs md:text-sm truncate">
-                            {item.name} {item.kotSent && <span className='ml-1 md:ml-2 px-1 md:px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs'>KOT</span>}
-                          </p>
-                          <p className="text-xs text-gray-500">₹{item.price} each</p>
+                          <div className="flex items-start gap-1">
+                            {/* Veg/Non-veg Symbol */}
+                            <div className={`w-3 h-3 border ${item.type === 'veg' ? 'border-green-600' : item.type === 'egg' ? 'border-yellow-600' : 'border-red-600'} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                              <div className={`w-1.5 h-1.5 rounded-full ${getFoodTypeColor(item.type)}`}></div>
+                            </div>
+                            <p className="font-medium text-xs md:text-sm leading-tight">
+                              {item.name} {item.kotSent && <span className='ml-1 px-1 py-0.5 bg-green-100 text-green-700 rounded text-xs'>KOT</span>}
+                            </p>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5">₹{item.price} each</p>
                           {item.orderIds && item.orderIds.length > 0 && (
                             <div className="mt-1 flex flex-wrap gap-1">
                               {item.orderIds.map((order, idx) => (
@@ -1337,6 +1360,8 @@ const BillingPage = () => {
                             </div>
                           )}
                         </div>
+                        
+                        {/* Remove Button */}
                         <button
                           onClick={() => handleRemoveClick(item)}
                           className="p-1 hover:bg-red-50 text-red-600 cursor-pointer flex-shrink-0"
@@ -1533,13 +1558,20 @@ const BillingPage = () => {
                     <div className="px-3 md:px-4 py-2 md:py-3 max-h-32 md:max-h-40 overflow-y-auto">
                       <div className="space-y-1.5">
                         {bill.items.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between text-xs md:text-sm bg-gray-50 p-1.5 md:p-2 border border-gray-200">
-                            <div className="flex items-center space-x-1 md:space-x-2 min-w-0 flex-1">
-                              <div className={`w-1.5 md:w-2 h-1.5 md:h-2 rounded-full flex-shrink-0 ${getFoodTypeColor(item.type)}`}></div>
+                          <div key={index} className="flex items-center gap-2 text-xs md:text-sm bg-gray-50 p-1.5 md:p-2 border border-gray-200">
+                            {/* Image */}
+                            <span className="text-base flex-shrink-0">{item.image || '🍽️'}</span>
+                            {/* Veg/Non-veg Symbol */}
+                            <div className={`w-3 h-3 border ${item.type === 'veg' ? 'border-green-600' : item.type === 'egg' ? 'border-yellow-600' : 'border-red-600'} flex items-center justify-center flex-shrink-0`}>
+                              <div className={`w-1.5 h-1.5 rounded-full ${getFoodTypeColor(item.type)}`}></div>
+                            </div>
+                            {/* Name & Qty */}
+                            <div className="flex items-center min-w-0 flex-1 gap-1">
                               <span className="font-medium text-gray-900 truncate">{item.name}</span>
                               <span className="text-xs text-gray-500 flex-shrink-0">x{item.quantity}</span>
                             </div>
-                            <span className="font-semibold text-gray-900 flex-shrink-0 ml-2">₹{(item.price * item.quantity).toFixed(2)}</span>
+                            {/* Price */}
+                            <span className="font-semibold text-gray-900 flex-shrink-0">₹{(item.price * item.quantity).toFixed(0)}</span>
                           </div>
                         ))}
                       </div>
@@ -1932,11 +1964,16 @@ const BillingPage = () => {
                       <span className="text-xs text-gray-600">{bill.customerName || 'Guest'}</span>
                       <span className="text-xs text-gray-600">{bill.items?.length || 0} items</span>
                     </div>
-                    <div className="space-y-1 max-h-20 overflow-hidden">
+                    <div className="space-y-1.5 max-h-24 overflow-hidden">
                       {bill.items?.slice(0, 3).map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between text-xs">
-                          <span className="text-gray-700 truncate flex-1">{item.name} x{item.quantity}</span>
-                          <span className="text-gray-900 font-medium ml-2">₹{(item.price * item.quantity).toFixed(0)}</span>
+                        <div key={idx} className="flex items-center gap-1.5 text-xs">
+                          <span className="flex-shrink-0">{item.image || '🍽️'}</span>
+                          <div className={`w-2.5 h-2.5 border ${item.type === 'veg' ? 'border-green-600' : item.type === 'egg' ? 'border-yellow-600' : 'border-red-600'} flex items-center justify-center flex-shrink-0`}>
+                            <div className={`w-1 h-1 rounded-full ${getFoodTypeColor(item.type)}`}></div>
+                          </div>
+                          <span className="text-gray-700 truncate flex-1">{item.name}</span>
+                          <span className="text-gray-500 flex-shrink-0">x{item.quantity}</span>
+                          <span className="text-gray-900 font-medium flex-shrink-0">₹{(item.price * item.quantity).toFixed(0)}</span>
                         </div>
                       ))}
                       {bill.items?.length > 3 && (
