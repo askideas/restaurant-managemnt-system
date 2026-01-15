@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, addDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, where, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { Plus, X, DollarSign, Users, IndianRupee, Calendar } from 'lucide-react';
+import { Plus, X, DollarSign, Users, IndianRupee, Calendar, SquarePen, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Payroll = () => {
@@ -12,6 +12,7 @@ const Payroll = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [salaries, setSalaries] = useState({});
+  const [editingPayroll, setEditingPayroll] = useState(null);
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -120,6 +121,50 @@ const Payroll = () => {
     }
   };
 
+  const handleEditPayroll = (payroll) => {
+    setEditingPayroll(payroll);
+    setSalaries({ [payroll.staffId]: payroll.salary });
+    setShowModal(true);
+  };
+
+  const handleUpdatePayroll = async () => {
+    try {
+      const newSalary = salaries[editingPayroll.staffId];
+      if (!newSalary || newSalary <= 0) {
+        toast.error('Please enter a valid salary amount');
+        return;
+      }
+
+      await updateDoc(doc(db, 'payrolls', editingPayroll.id), {
+        salary: parseFloat(newSalary),
+        updatedAt: new Date().toISOString(),
+      });
+
+      toast.success('Payroll updated successfully');
+      setShowModal(false);
+      setEditingPayroll(null);
+      fetchPayrolls();
+    } catch (error) {
+      console.error('Error updating payroll:', error);
+      toast.error('Failed to update payroll');
+    }
+  };
+
+  const handleDeletePayroll = async (payrollId, staffName) => {
+    if (!window.confirm(`Are you sure you want to delete payroll for ${staffName}?`)) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'payrolls', payrollId));
+      toast.success('Payroll deleted successfully');
+      fetchPayrolls();
+    } catch (error) {
+      console.error('Error deleting payroll:', error);
+      toast.error('Failed to delete payroll');
+    }
+  };
+
   const formatCurrency = (amount) => {
     return `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
@@ -174,9 +219,17 @@ const Payroll = () => {
         </div>
 
         <button
-          onClick={() => setShowModal(true)}
+          onClick={() => {
+            setEditingPayroll(null);
+            // Reset salaries to original staff salaries
+            const initialSalaries = {};
+            staff.forEach(s => {
+              initialSalaries[s.id] = s.salary || 0;
+            });
+            setSalaries(initialSalaries);
+            setShowModal(true);
+          }}
           className="flex items-center gap-2 bg-[#ec2b25] text-white px-6 py-3 hover:bg-[#d12520] transition-colors"
-          disabled={payrolls.length > 0}
         >
           <Plus className="w-5 h-5" />
           Add Payroll
@@ -259,6 +312,9 @@ const Payroll = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Paid Date
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y-2 divide-gray-200">
@@ -281,6 +337,24 @@ const Payroll = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-gray-600">
                       {new Date(payroll.createdAt).toLocaleDateString('en-IN')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEditPayroll(payroll)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 transition-colors"
+                          title="Edit Payroll"
+                        >
+                          <SquarePen className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeletePayroll(payroll.id, payroll.staffName)}
+                          className="p-2 text-red-600 hover:bg-red-50 transition-colors"
+                          title="Delete Payroll"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -306,20 +380,25 @@ const Payroll = () => {
         )}
       </div>
 
-      {/* Add Payroll Modal */}
+      {/* Add/Edit Payroll Modal */}
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
           <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* Modal Header */}
             <div className="p-6 border-b-2 border-gray-200 flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Add Payroll</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {editingPayroll ? 'Edit Payroll' : 'Add Payroll'}
+                </h2>
                 <p className="text-gray-600 mt-1">
-                  {months[selectedMonth]} {selectedYear}
+                  {editingPayroll ? `Editing ${editingPayroll.staffName}` : `${months[selectedMonth]} ${selectedYear}`}
                 </p>
               </div>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={() => {
+                  setShowModal(false);
+                  setEditingPayroll(null);
+                }}
                 className="p-2 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 <X className="w-6 h-6 text-gray-600" />
@@ -329,30 +408,57 @@ const Payroll = () => {
             {/* Modal Body */}
             <div className="p-6 overflow-y-auto flex-1">
               <div className="space-y-4">
-                {staff.map((s) => (
-                  <div key={s.id} className="border-2 border-gray-200 p-4 hover:border-[#ec2b25] transition-colors">
+                {editingPayroll ? (
+                  // Edit Mode - Single staff
+                  <div className="border-2 border-gray-200 p-4 border-[#ec2b25]">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <Users className="w-4 h-4 text-gray-400" />
-                          <h3 className="font-medium text-gray-900">{s.name}</h3>
+                          <h3 className="font-medium text-gray-900">{editingPayroll.staffName}</h3>
                         </div>
-                        <p className="text-sm text-gray-600">{s.email}</p>
-                        <p className="text-xs text-gray-500 mt-1">{s.phone}</p>
+                        <p className="text-sm text-gray-600">{editingPayroll.staffEmail}</p>
+                        <p className="text-xs text-gray-500 mt-1">{editingPayroll.monthName} {editingPayroll.year}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <IndianRupee className="w-5 h-5 text-gray-600" />
                         <input
                           type="number"
-                          value={salaries[s.id] || ''}
-                          onChange={(e) => handleSalaryChange(s.id, e.target.value)}
+                          value={salaries[editingPayroll.staffId] || ''}
+                          onChange={(e) => handleSalaryChange(editingPayroll.staffId, e.target.value)}
                           placeholder="Enter salary"
                           className="border-2 border-gray-200 px-3 py-2 w-40 focus:outline-none focus:border-[#ec2b25]"
                         />
                       </div>
                     </div>
                   </div>
-                ))}
+                ) : (
+                  // Add Mode - All staff
+                  staff.map((s) => (
+                    <div key={s.id} className="border-2 border-gray-200 p-4 hover:border-[#ec2b25] transition-colors">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Users className="w-4 h-4 text-gray-400" />
+                            <h3 className="font-medium text-gray-900">{s.name}</h3>
+                          </div>
+                          <p className="text-sm text-gray-600">{s.email}</p>
+                          <p className="text-xs text-gray-500 mt-1">{s.phone}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <IndianRupee className="w-5 h-5 text-gray-600" />
+                          <input
+                            type="number"
+                            value={salaries[s.id] || ''}
+                            onChange={(e) => handleSalaryChange(s.id, e.target.value)}
+                            placeholder="Enter salary"
+                            className="border-2 border-gray-200 px-3 py-2 w-40 focus:outline-none focus:border-[#ec2b25]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -366,16 +472,19 @@ const Payroll = () => {
               </div>
               <div className="flex gap-3">
                 <button
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingPayroll(null);
+                  }}
                   className="px-6 py-2 border-2 border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleSavePayroll}
+                  onClick={editingPayroll ? handleUpdatePayroll : handleSavePayroll}
                   className="px-6 py-2 bg-[#ec2b25] text-white hover:bg-[#d12520] transition-colors cursor-pointer"
                 >
-                  Save Payroll
+                  {editingPayroll ? 'Update Payroll' : 'Save Payroll'}
                 </button>
               </div>
             </div>
