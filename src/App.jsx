@@ -7,6 +7,7 @@ import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
 import BillingPage from './pages/BillingPage';
 import MenuPage from './pages/MenuPage';
 import TablesPage from './pages/TablesPage';
@@ -58,7 +59,7 @@ const App = () => {
                             path="/" 
                             element={
                               <ProtectedRoute menuValue="dashboard">
-                                <div>Dashboard Page - Coming Soon</div>
+                                <Dashboard />
                               </ProtectedRoute>
                             } 
                           />
