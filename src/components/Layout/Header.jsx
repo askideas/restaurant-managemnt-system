@@ -2,6 +2,7 @@ import React from 'react';
 import { Bell, User, Search, Phone, LogOut, Menu } from 'lucide-react';
 import { RESTAURANT_NAME, SUPPORT_PHONE } from '../../data/menuData';
 import { useAuth } from '../../context/AuthContext';
+import InstallButton from '../PWA/InstallButton';
 
 const Header = ({ onMenuClick }) => {
   const { staffData, logout } = useAuth();
@@ -50,6 +51,9 @@ const Header = ({ onMenuClick }) => {
             <span className="hidden md:inline text-sm font-medium">Support</span>
             <span className="hidden lg:inline text-sm">{SUPPORT_PHONE}</span>
           </a>
+
+          {/* PWA Install Button */}
+          <InstallButton variant="default" showStatus={true} />
           
           {/* Notifications - Hidden on mobile */}
           <button className="hidden md:block p-2 hover:bg-gray-100 transition-colors cursor-pointer">

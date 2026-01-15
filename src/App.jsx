@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { RestaurantProvider } from './context/RestaurantContext';
 import { AuthProvider } from './context/AuthContext';
+import { PWAProvider } from './context/PWAContext';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
 import ProtectedRoute from './components/ProtectedRoute';
+import UpdatePrompt from './components/PWA/UpdatePrompt';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import BillingPage from './pages/BillingPage';
@@ -40,10 +42,11 @@ const AppLayout = ({ children }) => {
 
 const App = () => {
   return (
-    <AuthProvider>
-      <RestaurantProvider>
-        <Router>
-          <Toaster
+    <PWAProvider>
+      <AuthProvider>
+        <RestaurantProvider>
+          <Router>
+            <Toaster
             position="top-right"
             toastOptions={{
               duration: 1500,
@@ -148,9 +151,11 @@ const App = () => {
               }
             />
           </Routes>
+          <UpdatePrompt />
         </Router>
       </RestaurantProvider>
     </AuthProvider>
+  </PWAProvider>
   );
 };
 
