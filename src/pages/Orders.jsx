@@ -83,10 +83,10 @@ const Orders = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2 text-sm">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Orders</h1>
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 text-xs md:text-sm">
             <span className="text-gray-600">Total Orders:</span>
             <span className="font-bold text-[#ec2b25]">{filteredOrders.length}</span>
           </div>
@@ -94,44 +94,44 @@ const Orders = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-200 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-white border border-gray-200 p-3 md:p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">Status</label>
             <select 
               value={status} 
               onChange={e => setStatus(e.target.value)} 
-              className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm"
+              className="w-full px-2 md:px-3 py-2 text-xs md:text-sm border border-gray-200 focus:outline-none focus:border-[#ec2b25]"
             >
               {STATUS_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+            <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">Type</label>
             <select 
               value={type} 
               onChange={e => setType(e.target.value)} 
-              className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm"
+              className="w-full px-2 md:px-3 py-2 text-xs md:text-sm border border-gray-200 focus:outline-none focus:border-[#ec2b25]"
             >
               {TYPE_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">From Date</label>
+            <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">From Date</label>
             <input 
               type="date" 
               value={fromDate} 
               onChange={e => setFromDate(e.target.value)} 
-              className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm"
+              className="w-full px-2 md:px-3 py-2 text-xs md:text-sm border border-gray-200 focus:outline-none focus:border-[#ec2b25]"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">To Date</label>
+            <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">To Date</label>
             <input 
               type="date" 
               value={toDate} 
               onChange={e => setToDate(e.target.value)} 
-              className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm"
+              className="w-full px-2 md:px-3 py-2 text-xs md:text-sm border border-gray-200 focus:outline-none focus:border-[#ec2b25]"
             />
           </div>
         </div>
@@ -139,29 +139,29 @@ const Orders = () => {
 
       {/* Orders List */}
       {loading ? (
-        <div className="bg-white border border-gray-200 p-12">
+        <div className="bg-white border border-gray-200 p-8 md:p-12">
           <div className="flex flex-col items-center justify-center space-y-4">
-            <Loader2 className="w-8 h-8 animate-spin text-[#ec2b25]" />
-            <p className="text-gray-500">Loading orders...</p>
+            <Loader2 className="w-6 md:w-8 h-6 md:h-8 animate-spin text-[#ec2b25]" />
+            <p className="text-sm md:text-base text-gray-500">Loading orders...</p>
           </div>
         </div>
       ) : filteredOrders.length === 0 ? (
-        <div className="bg-white border border-gray-200 p-12">
-          <div className="text-center text-gray-500">No orders found.</div>
+        <div className="bg-white border border-gray-200 p-8 md:p-12">
+          <div className="text-center text-sm md:text-base text-gray-500">No orders found.</div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {filteredOrders.map(order => (
             <div key={order.id} className="border-2 border-gray-200 bg-white hover:shadow-lg transition-all">
               {/* Header */}
-              <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+              <div className="bg-gray-50 px-3 md:px-4 py-2 md:py-3 border-b border-gray-200">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-3 py-1 text-xs font-bold border ${getOrderTypeColor(order.type)}`}>
+                  <div className="flex items-center space-x-1 md:space-x-2 min-w-0 flex-1">
+                    <span className={`px-2 md:px-3 py-1 text-xs font-bold border truncate ${getOrderTypeColor(order.type)}`}>
                       {getOrderTypeLabel(order.type)}
                     </span>
                   </div>
-                  <span className={`px-2 py-1 text-xs font-bold uppercase ${
+                  <span className={`px-1.5 md:px-2 py-1 text-xs font-bold uppercase flex-shrink-0 ${
                     order.status === 'completed' 
                       ? 'bg-green-600 text-white' 
                       : order.status === 'cancelled'
@@ -173,7 +173,7 @@ const Orders = () => {
                 </div>
                 <div className="space-y-1">
                   {order.orderId && (
-                    <div className="text-xs font-mono font-bold text-[#ec2b25]">
+                    <div className="text-xs md:text-sm font-mono font-bold text-[#ec2b25]">
                       {order.orderId}
                     </div>
                   )}
@@ -189,25 +189,25 @@ const Orders = () => {
               </div>
 
               {/* Body */}
-              <div className="px-4 py-3">
+              <div className="px-3 md:px-4 py-2 md:py-3">
                 {/* Customer & Table Info */}
                 <div className="mb-3 space-y-1">
                   {order.tableName && (
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center justify-between text-xs md:text-sm">
                       <span className="text-gray-600">Table:</span>
-                      <span className="font-bold text-gray-900">{order.tableName}</span>
+                      <span className="font-bold text-gray-900 truncate ml-2">{order.tableName}</span>
                     </div>
                   )}
                   {order.customerName && (
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center justify-between text-xs md:text-sm">
                       <span className="text-gray-600">Customer:</span>
-                      <span className="font-medium text-gray-900">{order.customerName}</span>
+                      <span className="font-medium text-gray-900 truncate ml-2">{order.customerName}</span>
                     </div>
                   )}
                   {order.platformOrderId && (
-                    <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center justify-between text-xs md:text-sm">
                       <span className="text-gray-600">{order.platform === 'swiggy' ? 'Swiggy' : 'Zomato'} Order:</span>
-                      <span className="font-mono font-bold text-gray-900">{order.platformOrderId}</span>
+                      <span className="font-mono font-bold text-gray-900 truncate ml-2">{order.platformOrderId}</span>
                     </div>
                   )}
                 </div>
@@ -215,38 +215,38 @@ const Orders = () => {
                 {/* Item Details */}
                 {order.itemName ? (
                   // Single item order (Dine In)
-                  <div className="bg-gray-50 border border-gray-200 p-3 mb-3">
-                    <div className="font-bold text-gray-900 mb-2">{order.itemName}</div>
-                    <div className="flex items-center justify-between text-sm">
+                  <div className="bg-gray-50 border border-gray-200 p-2 md:p-3 mb-3">
+                    <div className="font-bold text-xs md:text-sm text-gray-900 mb-2 truncate">{order.itemName}</div>
+                    <div className="flex items-center justify-between text-xs md:text-sm">
                       <div>
                         <span className="text-gray-600">Qty:</span>
-                        <span className="ml-2 font-bold text-gray-900">{order.quantity}</span>
+                        <span className="ml-1 md:ml-2 font-bold text-gray-900">{order.quantity}</span>
                       </div>
                       <div>
                         <span className="text-gray-600">Price:</span>
-                        <span className="ml-2 font-medium text-gray-900">₹{order.itemPrice}</span>
+                        <span className="ml-1 md:ml-2 font-medium text-gray-900">₹{order.itemPrice}</span>
                       </div>
                     </div>
                   </div>
                 ) : order.items ? (
                   // Multiple items order (Takeaway, Swiggy, Zomato)
-                  <div className="bg-gray-50 border border-gray-200 p-3 mb-3 space-y-2">
-                    <div className="font-bold text-gray-900 mb-2">Items ({order.items.length})</div>
+                  <div className="bg-gray-50 border border-gray-200 p-2 md:p-3 mb-3 space-y-2">
+                    <div className="font-bold text-xs md:text-sm text-gray-900 mb-2">Items ({order.items.length})</div>
                     {order.items.map((item, index) => (
                       <div key={index} className="border-b border-gray-200 pb-2 last:border-0 last:pb-0">
-                        <div className="font-medium text-gray-900 text-sm mb-1">{item.itemName}</div>
+                        <div className="font-medium text-gray-900 text-xs md:text-sm mb-1 truncate">{item.itemName}</div>
                         <div className="flex items-center justify-between text-xs">
                           <div>
                             <span className="text-gray-600">Qty:</span>
-                            <span className="ml-2 font-bold text-gray-900">{item.quantity}</span>
+                            <span className="ml-1 md:ml-2 font-bold text-gray-900">{item.quantity}</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Price:</span>
-                            <span className="ml-2 font-medium text-gray-900">₹{item.itemPrice}</span>
+                            <span className="ml-1 md:ml-2 font-medium text-gray-900">₹{item.itemPrice}</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Total:</span>
-                            <span className="ml-2 font-bold text-gray-900">₹{(item.itemPrice * item.quantity).toFixed(2)}</span>
+                            <span className="ml-1 md:ml-2 font-bold text-gray-900">₹{(item.itemPrice * item.quantity).toFixed(2)}</span>
                           </div>
                         </div>
                       </div>
@@ -255,10 +255,10 @@ const Orders = () => {
                 ) : null}
 
                 {/* Total Amount */}
-                <div className="bg-[#ec2b25] text-white p-3 mb-3">
+                <div className="bg-[#ec2b25] text-white p-2 md:p-3 mb-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold">Total Amount:</span>
-                    <span className="text-xl font-bold">₹{order.total?.toFixed(2)}</span>
+                    <span className="font-bold text-xs md:text-sm">Total Amount:</span>
+                    <span className="text-base md:text-xl font-bold">₹{order.total?.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -266,7 +266,7 @@ const Orders = () => {
                 <button
                   disabled={order.status === 'completed' || order.status === 'cancelled' || updatingId === order.id}
                   onClick={() => markAsComplete(order.id)}
-                  className={`w-full px-4 py-2 font-semibold text-sm transition-colors flex items-center justify-center space-x-2 ${
+                  className={`w-full px-3 md:px-4 py-2 font-semibold text-xs md:text-sm transition-colors flex items-center justify-center space-x-1 md:space-x-2 ${
                     order.status === 'completed' 
                       ? 'bg-green-100 text-green-700 cursor-not-allowed' 
                       : order.status === 'cancelled'
@@ -276,7 +276,7 @@ const Orders = () => {
                 >
                   {order.status === 'completed' ? (
                     <>
-                      <CheckCircle className="w-4 h-4" />
+                      <CheckCircle className="w-3 md:w-4 h-3 md:h-4" />
                       <span>Completed</span>
                     </>
                   ) : order.status === 'cancelled' ? (
@@ -284,10 +284,10 @@ const Orders = () => {
                       <span>Cancelled</span>
                     </>
                   ) : updatingId === order.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-3 md:w-4 h-3 md:h-4 animate-spin" />
                   ) : (
                     <>
-                      <Clock className="w-4 h-4" />
+                      <Clock className="w-3 md:w-4 h-3 md:h-4" />
                       <span>Mark as Complete</span>
                     </>
                   )}

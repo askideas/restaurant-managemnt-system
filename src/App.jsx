@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { RestaurantProvider } from './context/RestaurantContext';
 import { AuthProvider } from './context/AuthContext';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -15,6 +15,28 @@ import Orders from './pages/Orders';
 import Investment from './pages/Investment';
 import Payroll from './pages/Payroll';
 import Staff from './pages/Staff';
+
+const AppLayout = ({ children }) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  return (
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
+      {/* Sidebar */}
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col lg:ml-64 w-full">
+        {/* Header */}
+        <Header onMenuClick={() => setSidebarOpen(true)} />
+        
+        {/* Page Content */}
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+};
 
 const App = () => {
   return (
@@ -46,92 +68,82 @@ const App = () => {
               path="/*"
               element={
                 <ProtectedRoute>
-                  <div className="flex h-screen bg-gray-50">
-                    {/* Sidebar */}
-                    <Sidebar />
-                    {/* Main Content */}
-                    <div className="flex-1 ml-64 flex flex-col">
-                      {/* Header */}
-                      <Header />
-                      {/* Page Content */}
-                      <main className="flex-1 overflow-y-auto p-6">
-                        <Routes>
-                          <Route 
-                            path="/" 
-                            element={
-                              <ProtectedRoute menuValue="dashboard">
-                                <Dashboard />
-                              </ProtectedRoute>
-                            } 
-                          />
-                          <Route 
-                            path="/billing" 
-                            element={
-                              <ProtectedRoute menuValue="billing">
-                                <BillingPage />
-                              </ProtectedRoute>
-                            } 
-                          />
-                          <Route 
-                            path="/menu" 
-                            element={
-                              <ProtectedRoute menuValue="menu">
-                                <MenuPage />
-                              </ProtectedRoute>
-                            } 
-                          />
-                          <Route 
-                            path="/tables" 
-                            element={
-                              <ProtectedRoute menuValue="tables">
-                                <TablesPage />
-                              </ProtectedRoute>
-                            } 
-                          />
-                          <Route 
-                            path="/orders" 
-                            element={
-                              <ProtectedRoute menuValue="orders">
-                                <Orders />
-                              </ProtectedRoute>
-                            } 
-                          />
-                          <Route 
-                            path="/investment" 
-                            element={
-                              <ProtectedRoute menuValue="investment">
-                                <Investment />
-                              </ProtectedRoute>
-                            } 
-                          />
-                          <Route 
-                            path="/payroll" 
-                            element={
-                              <ProtectedRoute menuValue="payroll">
-                                <Payroll />
-                              </ProtectedRoute>
-                            } 
-                          />
-                          <Route 
-                            path="/staff" 
-                            element={
-                              <ProtectedRoute menuValue="staff">
-                                <Staff />
-                              </ProtectedRoute>
-                            } 
-                          />
-                          <Route 
-                            path="/settings" 
-                            element={
-                              <ProtectedRoute menuValue="settings">
-                                <div>Settings Page - Coming Soon</div>
-                              </ProtectedRoute>
-                            } 
-                          />
-                        </Routes>
-                      </main>
-                    </div>
-                  </div>
+                  <AppLayout>
+                    <Routes>
+                      <Route 
+                        path="/" 
+                        element={
+                          <ProtectedRoute menuValue="dashboard">
+                            <Dashboard />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/billing" 
+                        element={
+                          <ProtectedRoute menuValue="billing">
+                            <BillingPage />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/menu" 
+                        element={
+                          <ProtectedRoute menuValue="menu">
+                            <MenuPage />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/tables" 
+                        element={
+                          <ProtectedRoute menuValue="tables">
+                            <TablesPage />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/orders" 
+                        element={
+                          <ProtectedRoute menuValue="orders">
+                            <Orders />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/investment" 
+                        element={
+                          <ProtectedRoute menuValue="investment">
+                            <Investment />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/payroll" 
+                        element={
+                          <ProtectedRoute menuValue="payroll">
+                            <Payroll />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/staff" 
+                        element={
+                          <ProtectedRoute menuValue="staff">
+                            <Staff />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/settings" 
+                        element={
+                          <ProtectedRoute menuValue="settings">
+                            <div>Settings Page - Coming Soon</div>
+                          </ProtectedRoute>
+                        } 
+                      />
+                    </Routes>
+                  </AppLayout>
                 </ProtectedRoute>
               }
             />

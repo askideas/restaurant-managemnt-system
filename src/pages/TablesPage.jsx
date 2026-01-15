@@ -157,37 +157,37 @@ const TablesPage = () => {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Tables Management</h1>
-        <div className="flex space-x-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Tables Management</h1>
+        <div className="flex flex-wrap gap-2 md:gap-3 w-full sm:w-auto">
           <button
             onClick={() => setShowFloorModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer"
+            className="flex items-center justify-center space-x-1 md:space-x-2 px-3 md:px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer text-sm md:text-base flex-1 sm:flex-initial"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3 md:w-4 h-3 md:h-4" />
             <span>Add Floor</span>
           </button>
           <button
             onClick={() => setShowTableModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 border border-[#ec2b25] text-[#ec2b25] hover:bg-[#ec2b25] hover:text-white transition-colors cursor-pointer"
+            className="flex items-center justify-center space-x-1 md:space-x-2 px-3 md:px-4 py-2 border border-[#ec2b25] text-[#ec2b25] hover:bg-[#ec2b25] hover:text-white transition-colors cursor-pointer text-sm md:text-base flex-1 sm:flex-initial"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3 md:w-4 h-3 md:h-4" />
             <span>Add Table</span>
           </button>
         </div>
       </div>
 
       {/* Floors Section */}
-      <div className="bg-white p-6 border border-gray-200">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Floors</h2>
+      <div className="bg-white p-3 md:p-6 border border-gray-200">
+        <h2 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">Floors</h2>
         
         {loading ? (
-          <div className="text-center py-8 text-gray-500">Loading...</div>
+          <div className="text-center py-6 md:py-8 text-sm md:text-base text-gray-500">Loading...</div>
         ) : (
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 md:gap-3">
             <button
               onClick={() => setSelectedFloor('all')}
-              className={`px-4 py-2 border transition-colors cursor-pointer ${
+              className={`px-3 md:px-4 py-2 text-xs md:text-sm border transition-colors cursor-pointer ${
                 selectedFloor === 'all'
                   ? 'bg-[#ec2b25] text-white border-[#ec2b25]'
                   : 'border-gray-200 text-gray-700 hover:bg-gray-100'
@@ -198,7 +198,7 @@ const TablesPage = () => {
             {floors.map((floor) => (
               <div
                 key={floor.id}
-                className={`px-4 py-2 border transition-colors flex items-center justify-between ${
+                className={`px-2 md:px-4 py-2 text-xs md:text-sm border transition-colors flex items-center justify-between ${
                   selectedFloor === floor.id
                     ? 'bg-[#ec2b25] text-white border-[#ec2b25]'
                     : 'border-gray-200 text-gray-700 hover:bg-gray-100'
@@ -206,13 +206,13 @@ const TablesPage = () => {
               >
                 <button
                   onClick={() => setSelectedFloor(floor.id)}
-                  className="flex items-center space-x-2 cursor-pointer"
+                  className="flex items-center space-x-1 md:space-x-2 cursor-pointer min-w-0"
                 >
-                  <span className="font-mono text-sm">{floor.shortCode}</span>
-                  <span>{floor.name}</span>
+                  <span className="font-mono text-xs md:text-sm flex-shrink-0">{floor.shortCode}</span>
+                  <span className="truncate">{floor.name}</span>
                 </button>
-                <div className="flex items-center space-x-1">
-                  <div className={`h-6 w-px mx-2 ${
+                <div className="flex items-center space-x-1 flex-shrink-0">
+                  <div className={`h-5 md:h-6 w-px mx-1 md:mx-2 ${
                     selectedFloor === floor.id ? 'bg-white bg-opacity-30' : 'bg-gray-300'
                   }`}></div>
                   <button
@@ -225,7 +225,7 @@ const TablesPage = () => {
                     }`}
                     title="Edit floor"
                   >
-                    <SquarePen className="w-4 h-4" />
+                    <SquarePen className="w-3 md:w-4 h-3 md:h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteFloor(floor.id)}
@@ -234,7 +234,7 @@ const TablesPage = () => {
                     }`}
                     title="Delete floor"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3 md:w-4 h-3 md:h-4" />
                   </button>
                 </div>
               </div>
@@ -243,32 +243,32 @@ const TablesPage = () => {
         )}
 
         {!loading && floors.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-6 md:py-8 text-sm md:text-base text-gray-500">
             No floors yet. Click "Add Floor" to create one.
           </div>
         )}
       </div>
 
       {/* Tables Section */}
-      <div className="bg-white p-6 border border-gray-200">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Tables</h2>
+      <div className="bg-white p-3 md:p-6 border border-gray-200">
+        <h2 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">Tables</h2>
         
         {loading ? (
-          <div className="text-center py-8 text-gray-500">Loading...</div>
+          <div className="text-center py-6 md:py-8 text-sm md:text-base text-gray-500">Loading...</div>
         ) : filteredTables.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-6 md:py-8 text-sm md:text-base text-gray-500">
             {selectedFloor === 'all' 
               ? 'No tables yet. Click "Add Table" to create one.'
               : 'No tables on this floor.'}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
             {filteredTables.map((table) => {
               const floor = floors.find(f => f.id === table.floorId);
               return (
                 <div
                   key={table.id}
-                  className="border border-gray-200 p-4 hover:border-gray-300 transition-colors relative"
+                  className="border border-gray-200 p-3 md:p-4 hover:border-gray-300 transition-colors relative"
                 >
                   <div className="absolute top-2 right-2 flex items-center space-x-1">
                     <button
@@ -279,22 +279,22 @@ const TablesPage = () => {
                       className="p-1 hover:bg-gray-100 text-gray-600 cursor-pointer"
                       title="Edit table"
                     >
-                      <SquarePen className="w-4 h-4" />
+                      <SquarePen className="w-3 md:w-4 h-3 md:h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteTable(table.id)}
                       className="p-1 hover:bg-red-50 text-red-600 cursor-pointer"
                       title="Delete table"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 md:w-4 h-3 md:h-4" />
                     </button>
                   </div>
                   <div className="pr-12">
-                    <h3 className="font-medium text-gray-900 mb-1">{table.name}</h3>
+                    <h3 className="font-medium text-sm md:text-base text-gray-900 mb-1 truncate">{table.name}</h3>
                     <div className="space-y-1">
-                      <div className="text-xs text-gray-500 font-mono">{table.shortCode}</div>
+                      <div className="text-xs font-mono text-gray-500">{table.shortCode}</div>
                       {floor && (
-                        <div className="text-sm text-gray-500">
+                        <div className="text-xs md:text-sm text-gray-500 truncate">
                           <span className="font-mono">{floor.shortCode}</span> - {floor.name}
                         </div>
                       )}
@@ -330,23 +330,23 @@ const TablesPage = () => {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm.show && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <div className="bg-white w-full max-w-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Confirm Delete</h2>
-            <p className="text-gray-700 mb-6">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="bg-white w-full max-w-md p-4 md:p-6">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">Confirm Delete</h2>
+            <p className="text-sm md:text-base text-gray-700 mb-4 md:mb-6">
               Are you sure you want to delete <span className="font-semibold">{deleteConfirm.name}</span>?
               {deleteConfirm.type === 'floor' && ' This will not delete tables on this floor.'}
             </p>
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-2 md:space-x-3">
               <button
                 onClick={() => setDeleteConfirm({ show: false, type: '', id: '', name: '' })}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+                className="px-3 md:px-4 py-2 text-sm md:text-base text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={deleteConfirm.type === 'floor' ? confirmDeleteFloor : confirmDeleteTable}
-                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors cursor-pointer"
+                className="px-3 md:px-4 py-2 text-sm md:text-base bg-red-600 text-white hover:bg-red-700 transition-colors cursor-pointer"
               >
                 Delete
               </button>

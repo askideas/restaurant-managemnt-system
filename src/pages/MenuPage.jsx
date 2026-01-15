@@ -166,37 +166,37 @@ const MenuPage = () => {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Menu Management</h1>
-        <div className="flex space-x-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Menu Management</h1>
+        <div className="flex flex-wrap gap-2 md:gap-3 w-full sm:w-auto">
           <button
             onClick={() => setShowCategoryModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer"
+            className="flex items-center justify-center space-x-1 md:space-x-2 px-3 md:px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer text-sm md:text-base flex-1 sm:flex-initial"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3 md:w-4 h-3 md:h-4" />
             <span>Add Category</span>
           </button>
           <button
             onClick={() => setShowItemModal(true)}
-            className="flex items-center space-x-2 px-4 py-2 border border-[#ec2b25] text-[#ec2b25] hover:bg-[#ec2b25] hover:text-white transition-colors cursor-pointer"
+            className="flex items-center justify-center space-x-1 md:space-x-2 px-3 md:px-4 py-2 border border-[#ec2b25] text-[#ec2b25] hover:bg-[#ec2b25] hover:text-white transition-colors cursor-pointer text-sm md:text-base flex-1 sm:flex-initial"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3 md:w-4 h-3 md:h-4" />
             <span>Add Item</span>
           </button>
         </div>
       </div>
 
       {/* Categories Section */}
-      <div className="bg-white p-6 border border-gray-200">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Categories</h2>
+      <div className="bg-white p-3 md:p-6 border border-gray-200">
+        <h2 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">Categories</h2>
         
         {loading ? (
-          <div className="text-center py-8 text-gray-500">Loading...</div>
+          <div className="text-center py-6 md:py-8 text-sm md:text-base text-gray-500">Loading...</div>
         ) : (
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 md:gap-3">
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`px-4 py-2 border transition-colors cursor-pointer ${
+              className={`px-3 md:px-4 py-2 text-xs md:text-sm border transition-colors cursor-pointer ${
                 selectedCategory === 'all'
                   ? 'bg-[#ec2b25] text-white border-[#ec2b25]'
                   : 'border-gray-200 text-gray-700 hover:bg-gray-100'
@@ -207,7 +207,7 @@ const MenuPage = () => {
             {categories.map((category) => (
               <div
                 key={category.id}
-                className={`px-4 py-2 border transition-colors flex items-center justify-between ${
+                className={`px-2 md:px-4 py-2 text-xs md:text-sm border transition-colors flex items-center justify-between ${
                   selectedCategory === category.id
                     ? 'bg-[#ec2b25] text-white border-[#ec2b25]'
                     : 'border-gray-200 text-gray-700 hover:bg-gray-100'
@@ -215,13 +215,13 @@ const MenuPage = () => {
               >
                 <button
                   onClick={() => setSelectedCategory(category.id)}
-                  className="flex items-center space-x-2 cursor-pointer"
+                  className="flex items-center space-x-1 md:space-x-2 cursor-pointer min-w-0"
                 >
-                  <span>{category.emoji}</span>
-                  <span>{category.name}</span>
+                  <span className="text-sm md:text-base">{category.emoji}</span>
+                  <span className="truncate">{category.name}</span>
                 </button>
-                <div className="flex items-center space-x-1">
-                  <div className={`h-6 w-px mx-2 ${
+                <div className="flex items-center space-x-1 flex-shrink-0">
+                  <div className={`h-5 md:h-6 w-px mx-1 md:mx-2 ${
                     selectedCategory === category.id ? 'bg-white bg-opacity-30' : 'bg-gray-300'
                   }`}></div>
                   <button
@@ -234,7 +234,7 @@ const MenuPage = () => {
                     }`}
                     title="Edit category"
                   >
-                    <SquarePen className="w-4 h-4" />
+                    <SquarePen className="w-3 md:w-4 h-3 md:h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteCategory(category.id)}
@@ -243,7 +243,7 @@ const MenuPage = () => {
                     }`}
                     title="Delete category"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3 md:w-4 h-3 md:h-4" />
                   </button>
                 </div>
               </div>
@@ -252,32 +252,32 @@ const MenuPage = () => {
         )}
 
         {!loading && categories.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-6 md:py-8 text-sm md:text-base text-gray-500">
             No categories yet. Click "Add Category" to create one.
           </div>
         )}
       </div>
 
       {/* Items Section */}
-      <div className="bg-white p-6 border border-gray-200">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Menu Items</h2>
+      <div className="bg-white p-3 md:p-6 border border-gray-200">
+        <h2 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">Menu Items</h2>
         
         {loading ? (
-          <div className="text-center py-8 text-gray-500">Loading...</div>
+          <div className="text-center py-6 md:py-8 text-sm md:text-base text-gray-500">Loading...</div>
         ) : filteredItems.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-6 md:py-8 text-sm md:text-base text-gray-500">
             {selectedCategory === 'all' 
               ? 'No items yet. Click "Add Item" to create one.'
               : 'No items in this category.'}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
             {filteredItems.map((item) => {
               const category = categories.find(cat => cat.id === item.categoryId);
               return (
                 <div
                   key={item.id}
-                  className="border border-gray-200 p-4 hover:border-gray-300 transition-colors relative"
+                  className="border border-gray-200 p-3 md:p-4 hover:border-gray-300 transition-colors relative"
                 >
                   <div className="absolute top-2 right-2 flex items-center space-x-1">
                     <button
@@ -288,31 +288,31 @@ const MenuPage = () => {
                       className="p-1 hover:bg-gray-100 text-gray-600 cursor-pointer"
                       title="Edit item"
                     >
-                      <SquarePen className="w-4 h-4" />
+                      <SquarePen className="w-3 md:w-4 h-3 md:h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteItem(item.id)}
                       className="p-1 hover:bg-red-50 text-red-600 cursor-pointer"
                       title="Delete item"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 md:w-4 h-3 md:h-4" />
                     </button>
                   </div>
                   <div className="flex items-start justify-between mb-2 pr-12">
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-3 h-3 rounded-full ${getFoodTypeColor(item.type)}`}></div>
-                      <h3 className="font-medium text-gray-900">{item.name}</h3>
+                    <div className="flex items-center space-x-1 md:space-x-2 min-w-0 flex-1">
+                      <div className={`w-2 md:w-3 h-2 md:h-3 rounded-full flex-shrink-0 ${getFoodTypeColor(item.type)}`}></div>
+                      <h3 className="font-medium text-sm md:text-base text-gray-900 truncate">{item.name}</h3>
                     </div>
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500 font-mono">{item.shortCode}</span>
-                      <span className="text-lg font-bold text-gray-900">₹{item.price}</span>
+                      <span className="text-xs font-mono text-gray-500">{item.shortCode}</span>
+                      <span className="text-base md:text-lg font-bold text-gray-900">₹{item.price}</span>
                     </div>
                     {category && (
-                      <div className="flex items-center space-x-1 text-sm text-gray-500">
+                      <div className="flex items-center space-x-1 text-xs md:text-sm text-gray-500">
                         <span>{category.emoji}</span>
-                        <span>{category.name}</span>
+                        <span className="truncate">{category.name}</span>
                       </div>
                     )}
                   </div>
@@ -346,23 +346,23 @@ const MenuPage = () => {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirm.show && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <div className="bg-white w-full max-w-md p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Confirm Delete</h2>
-            <p className="text-gray-700 mb-6">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="bg-white w-full max-w-md p-4 md:p-6">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">Confirm Delete</h2>
+            <p className="text-sm md:text-base text-gray-700 mb-4 md:mb-6">
               Are you sure you want to delete <span className="font-semibold">{deleteConfirm.name}</span>?
               {deleteConfirm.type === 'category' && ' This will not delete items in this category.'}
             </p>
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-2 md:space-x-3">
               <button
                 onClick={() => setDeleteConfirm({ show: false, type: '', id: '', name: '' })}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+                className="px-3 md:px-4 py-2 text-sm md:text-base text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={deleteConfirm.type === 'category' ? confirmDeleteCategory : confirmDeleteItem}
-                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors cursor-pointer"
+                className="px-3 md:px-4 py-2 text-sm md:text-base bg-red-600 text-white hover:bg-red-700 transition-colors cursor-pointer"
               >
                 Delete
               </button>

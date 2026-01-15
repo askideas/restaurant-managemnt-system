@@ -822,48 +822,48 @@ const BillingPage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Billing</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Billing</h1>
         {showAddBill && (
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium">Bill For</span>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs md:text-sm font-medium whitespace-nowrap">Bill For</span>
               <button
                 type="button"
                 onClick={() => setBillType('dine-in')}
-                className={`px-3 py-1 rounded border text-sm font-medium transition-colors cursor-pointer ${billType === 'dine-in' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
+                className={`px-2 md:px-3 py-1 rounded border text-xs md:text-sm font-medium transition-colors cursor-pointer ${billType === 'dine-in' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
               >
                 Dine In
               </button>
               <button
                 type="button"
                 onClick={() => setBillType('take-away')}
-                className={`px-3 py-1 rounded border text-sm font-medium transition-colors cursor-pointer ${billType === 'take-away' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
+                className={`px-2 md:px-3 py-1 rounded border text-xs md:text-sm font-medium transition-colors cursor-pointer ${billType === 'take-away' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
               >
                 Take Away
               </button>
               <button
                 type="button"
                 onClick={() => setBillType('swiggy')}
-                className={`px-3 py-1 rounded border text-sm font-medium transition-colors cursor-pointer ${billType === 'swiggy' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
+                className={`px-2 md:px-3 py-1 rounded border text-xs md:text-sm font-medium transition-colors cursor-pointer ${billType === 'swiggy' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
               >
                 Swiggy
               </button>
               <button
                 type="button"
                 onClick={() => setBillType('zomato')}
-                className={`px-3 py-1 rounded border text-sm font-medium transition-colors cursor-pointer ${billType === 'zomato' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
+                className={`px-2 md:px-3 py-1 rounded border text-xs md:text-sm font-medium transition-colors cursor-pointer ${billType === 'zomato' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
               >
                 Zomato
               </button>
             </div>
             <button
               onClick={() => setShowAddBill(!showAddBill)}
-              className="flex items-center space-x-2 px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer"
+              className="flex items-center justify-center gap-2 px-3 md:px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer text-sm md:text-base"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3 md:w-4 h-3 md:h-4" />
               <span>{showAddBill ? 'Close' : 'Add Bill'}</span>
             </button>
           </div>
@@ -871,9 +871,9 @@ const BillingPage = () => {
         {!showAddBill && (
           <button
             onClick={() => setShowAddBill(!showAddBill)}
-            className="flex items-center space-x-2 px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-2 px-3 md:px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer text-sm md:text-base w-full sm:w-auto"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3 md:w-4 h-3 md:h-4" />
             <span>{showAddBill ? 'Close' : 'Add Bill'}</span>
           </button>
         )}
@@ -881,21 +881,21 @@ const BillingPage = () => {
 
       {/* Add Bill Section */}
       {showAddBill && (
-        <div ref={addBillSectionRef} className="bg-white border border-gray-200 p-6">
-          <div className="grid grid-cols-3 gap-6">
+        <div ref={addBillSectionRef} className="bg-white border border-gray-200 p-3 md:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             {/* Column 1: Tables Selection or Customer Name */}
             {billType === 'dine-in' && (
-              <div className="border-r border-gray-200 pr-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Select Table</h3>
+              <div className="lg:border-r border-gray-200 lg:pr-6">
+                <h3 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">Select Table</h3>
                 
                 {/* Customer Name */}
-                <div className="mb-4">
+                <div className="mb-3 md:mb-4">
                   <input
                     type="text"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="Customer Name (Optional)"
-                    className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm"
+                    className="w-full px-2 md:px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-xs md:text-sm"
                   />
                 </div>
 
@@ -958,33 +958,33 @@ const BillingPage = () => {
               </div>
             )}
             {(billType === 'take-away' || billType === 'swiggy' || billType === 'zomato') && (
-              <div className="pr-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Customer Details</h3>
+              <div className="lg:pr-6">
+                <h3 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">Customer Details</h3>
                 {/* Customer Name for Take Away/Swiggy/Zomato */}
-                <div className="mb-4">
+                <div className="mb-3 md:mb-4">
                   <input
                     type="text"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="Customer Name (Optional)"
-                    className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm"
+                    className="w-full px-2 md:px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-xs md:text-sm"
                   />
                 </div>
               </div>
             )}
 
             {/* Column 2: Items Selection */}
-            <div className="border-r border-gray-200 pr-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Select Items</h3>
+            <div className="lg:border-r border-gray-200 lg:pr-6">
+              <h3 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">Select Items</h3>
               
               {/* Category Dropdown */}
-              <div className="mb-4">
+              <div className="mb-3 md:mb-4">
                 <div className="relative">
                   <button
                     onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                    className="w-full px-3 py-2 border border-gray-200 flex items-center justify-between hover:border-gray-300 cursor-pointer"
+                    className="w-full px-2 md:px-3 py-2 border border-gray-200 flex items-center justify-between hover:border-gray-300 cursor-pointer"
                   >
-                    <span className="text-sm">
+                    <span className="text-xs md:text-sm truncate">
                       {selectedCategoryData 
                         ? `${selectedCategoryData.emoji} ${selectedCategoryData.name}` 
                         : 'All Categories'}
@@ -1039,12 +1039,12 @@ const BillingPage = () => {
               </div>
 
               {/* Items List */}
-              <div ref={itemsListRef} className="space-y-2 max-h-96 overflow-y-auto">
+              <div ref={itemsListRef} className="space-y-2 max-h-64 md:max-h-96 overflow-y-auto">
                 {filteredItems.map(item => (
                   <button
                     key={item.id}
                     onClick={() => addItemToBill(item)}
-                    className="w-full p-3 border border-gray-200 hover:border-[#ec2b25] hover:bg-gray-50 text-left cursor-pointer transition-colors"
+                    className="w-full p-2 md:p-3 border border-gray-200 hover:border-[#ec2b25] hover:bg-gray-50 text-left cursor-pointer transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
@@ -1065,16 +1065,16 @@ const BillingPage = () => {
             <div>
               <h3 className="text-lg font-bold text-gray-900 mb-4">Bill Summary</h3>
               
-              <div className="space-y-2 max-h-80 overflow-y-auto mb-4">
+              <div className="space-y-2 max-h-64 md:max-h-80 overflow-y-auto mb-3 md:mb-4">
                 {billItems.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-8">No items added</p>
+                  <p className="text-xs md:text-sm text-gray-500 text-center py-6 md:py-8">No items added</p>
                 ) : (
                   billItems.map(item => (
-                    <div key={item.id} className="p-3 border border-gray-200">
+                    <div key={item.id} className="p-2 md:p-3 border border-gray-200">
                       <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">
-                            {item.name} {item.kotSent && <span className='ml-2 px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs'>KOT</span>}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-xs md:text-sm truncate">
+                            {item.name} {item.kotSent && <span className='ml-1 md:ml-2 px-1 md:px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs'>KOT</span>}
                           </p>
                           <p className="text-xs text-gray-500">₹{item.price} each</p>
                           {item.orderIds && item.orderIds.length > 0 && (
@@ -1089,29 +1089,29 @@ const BillingPage = () => {
                         </div>
                         <button
                           onClick={() => handleRemoveClick(item)}
-                          className="p-1 hover:bg-red-50 text-red-600 cursor-pointer"
+                          className="p-1 hover:bg-red-50 text-red-600 cursor-pointer flex-shrink-0"
                           title="Remove item"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-3 md:w-4 h-3 md:h-4" />
                         </button>
                       </div>
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1 md:space-x-2">
                           <button
                             onClick={() => updateQuantity(item.id, -1)}
-                            className="w-6 h-6 border border-gray-300 flex items-center justify-center hover:bg-gray-100 cursor-pointer"
+                            className="w-6 h-6 md:w-7 md:h-7 border border-gray-300 flex items-center justify-center hover:bg-gray-100 cursor-pointer"
                           >
                             <Minus className="w-3 h-3" />
                           </button>
-                          <span className="w-8 text-center font-medium text-sm">{item.quantity}</span>
+                          <span className="w-6 md:w-8 text-center font-medium text-xs md:text-sm">{item.quantity}</span>
                           <button
                             onClick={() => updateQuantity(item.id, 1)}
-                            className="w-6 h-6 border border-gray-300 flex items-center justify-center hover:bg-gray-100 cursor-pointer"
+                            className="w-6 h-6 md:w-7 md:h-7 border border-gray-300 flex items-center justify-center hover:bg-gray-100 cursor-pointer"
                           >
                             <Plus className="w-3 h-3" />
                           </button>
                         </div>
-                        <span className="font-bold text-sm">₹{item.price * item.quantity}</span>
+                        <span className="font-bold text-xs md:text-sm ml-2">₹{item.price * item.quantity}</span>
                       </div>
                     </div>
                   ))
@@ -1119,70 +1119,70 @@ const BillingPage = () => {
               </div>
 
               {/* Subtotal, Discount, and Total */}
-              <div className="border-t-2 border-gray-900 pt-4 mb-4">
-                <div className="flex items-center justify-between mb-2 text-sm">
+              <div className="border-t-2 border-gray-900 pt-3 md:pt-4 mb-3 md:mb-4">
+                <div className="flex items-center justify-between mb-2 text-xs md:text-sm">
                   <span className="text-gray-700">Subtotal:</span>
                   <span className="font-medium">₹{calculateSubtotal()}</span>
                 </div>
                 
                 {/* Discount Input */}
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-700">Discount (%):</span>
+                  <span className="text-xs md:text-sm text-gray-700">Discount (%):</span>
                   <input
                     type="number"
                     min="0"
                     max="100"
                     value={discount}
                     onChange={(e) => setDiscount(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
-                    className="w-20 px-2 py-1 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm text-right"
+                    className="w-16 md:w-20 px-2 py-1 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-xs md:text-sm text-right"
                   />
                 </div>
                 
                 {discount > 0 && (
-                  <div className="flex items-center justify-between mb-2 text-sm text-green-600">
+                  <div className="flex items-center justify-between mb-2 text-xs md:text-sm text-green-600">
                     <span>Discount Amount:</span>
                     <span>- ₹{((calculateSubtotal() * discount) / 100).toFixed(2)}</span>
                   </div>
                 )}
                 
                 <div className="flex items-center justify-between mb-2 pt-2 border-t border-gray-300">
-                  <span className="text-lg font-bold">Total:</span>
-                  <span className="text-2xl font-bold text-[#ec2b25]">₹{calculateTotal().toFixed(2)}</span>
+                  <span className="text-base md:text-lg font-bold">Total:</span>
+                  <span className="text-lg md:text-2xl font-bold text-[#ec2b25]">₹{calculateTotal().toFixed(2)}</span>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-3 gap-2 mb-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2">
                 <button
                   onClick={handleSaveBill}
                   disabled={saving}
-                  className="flex flex-col items-center justify-center px-2 py-3 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex flex-col items-center justify-center px-2 py-2 md:py-3 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {saving ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin mb-1" />
+                      <Loader2 className="w-4 md:w-5 h-4 md:h-5 animate-spin mb-1" />
                       <span className="text-xs">Saving...</span>
                     </>
                   ) : (
                     <>
-                      <Save className="w-5 h-5 mb-1" />
+                      <Save className="w-4 md:w-5 h-4 md:h-5 mb-1" />
                       <span className="text-xs">Save</span>
                     </>
                   )}
                 </button>
                 <button
                   onClick={handlePrintBill}
-                  className="flex flex-col items-center justify-center px-2 py-3 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-colors cursor-pointer"
+                  className="flex flex-col items-center justify-center px-2 py-2 md:py-3 border border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-colors cursor-pointer"
                 >
-                  <Printer className="w-5 h-5 mb-1" />
+                  <Printer className="w-4 md:w-5 h-4 md:h-5 mb-1" />
                   <span className="text-xs">Print</span>
                 </button>
                 <button
                   onClick={handlePayment}
                   disabled={!currentBillId}
-                  className="flex flex-col items-center justify-center px-2 py-3 bg-green-600 text-white hover:bg-green-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex flex-col items-center justify-center px-2 py-2 md:py-3 bg-green-600 text-white hover:bg-green-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <CreditCard className="w-5 h-5 mb-1" />
+                  <CreditCard className="w-4 md:w-5 h-4 md:h-5 mb-1" />
                   <span className="text-xs">Payment</span>
                 </button>
               </div>
@@ -1191,10 +1191,10 @@ const BillingPage = () => {
               {currentBillId && billItems.some(item => item.orderIds && item.orderIds.length > 0) && (
                 <button
                   onClick={handleCancelOrder}
-                  className="w-full mt-2 flex items-center justify-center space-x-2 px-4 py-2 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
+                  className="w-full mt-2 flex items-center justify-center space-x-2 px-3 md:px-4 py-2 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
                 >
-                  <X className="w-4 h-4" />
-                  <span className="text-sm font-medium">Cancel All Orders</span>
+                  <X className="w-3 md:w-4 h-3 md:h-4" />
+                  <span className="text-xs md:text-sm font-medium">Cancel All Orders</span>
                 </button>
               )}
             </div>
@@ -1203,13 +1203,13 @@ const BillingPage = () => {
       )}
 
       {/* Bills List */}
-      <div className="bg-white border border-gray-200 p-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Recent Bills</h2>
+      <div className="bg-white border border-gray-200 p-3 md:p-6">
+        <h2 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">Recent Bills</h2>
         
         {loading ? (
-          <div className="text-center py-8 text-gray-500">Loading...</div>
+          <div className="text-center py-6 md:py-8 text-sm md:text-base text-gray-500">Loading...</div>
         ) : bills.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No bills yet</div>
+          <div className="text-center py-6 md:py-8 text-sm md:text-base text-gray-500">No bills yet</div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1241,17 +1241,17 @@ const BillingPage = () => {
                     className={`border-2 border-gray-200 bg-white hover:shadow-lg transition-all ${bill.status === 'open' ? 'cursor-pointer hover:border-[#ec2b25]' : 'cursor-default'}`}
                   >
                     {/* Header */}
-                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                    <div className="bg-gray-50 px-3 md:px-4 py-2 md:py-3 border-b border-gray-200">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <span className={`px-3 py-1 text-xs font-bold border ${getBillTypeColor(bill.type)}`}>
+                        <div className="flex items-center space-x-1 md:space-x-2 min-w-0 flex-1">
+                          <span className={`px-2 md:px-3 py-1 text-xs font-bold border truncate ${getBillTypeColor(bill.type)}`}>
                             {getBillTypeLabel(bill.type)}
                           </span>
                           {bill.billId && (
-                            <span className="text-xs font-mono font-semibold text-gray-700">{bill.billId}</span>
+                            <span className="text-xs font-mono font-semibold text-gray-700 truncate">{bill.billId}</span>
                           )}
                         </div>
-                        <span className={`px-2 py-1 text-xs font-bold uppercase ${
+                        <span className={`px-1.5 md:px-2 py-1 text-xs font-bold uppercase flex-shrink-0 ${
                           bill.status === 'open' 
                             ? 'bg-orange-500 text-white' 
                             : bill.status === 'paid' 
@@ -1262,45 +1262,45 @@ const BillingPage = () => {
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <div>
-                          {bill.tableName && <p className="font-bold text-gray-900">{bill.tableName}</p>}
-                          <p className="text-sm text-gray-600">{bill.customerName}</p>
+                        <div className="min-w-0 flex-1">
+                          {bill.tableName && <p className="font-bold text-sm md:text-base text-gray-900 truncate">{bill.tableName}</p>}
+                          <p className="text-xs md:text-sm text-gray-600 truncate">{bill.customerName}</p>
                         </div>
                       </div>
                     </div>
 
                     {/* Items List */}
-                    <div className="px-4 py-3 max-h-40 overflow-y-auto">
+                    <div className="px-3 md:px-4 py-2 md:py-3 max-h-32 md:max-h-40 overflow-y-auto">
                       <div className="space-y-1.5">
                         {bill.items.map((item, index) => (
-                          <div key={index} className="flex items-center justify-between text-sm bg-gray-50 p-2 border border-gray-200">
-                            <div className="flex items-center space-x-2">
-                              <div className={`w-2 h-2 rounded-full ${getFoodTypeColor(item.type)}`}></div>
-                              <span className="font-medium text-gray-900">{item.name}</span>
-                              <span className="text-xs text-gray-500">x{item.quantity}</span>
+                          <div key={index} className="flex items-center justify-between text-xs md:text-sm bg-gray-50 p-1.5 md:p-2 border border-gray-200">
+                            <div className="flex items-center space-x-1 md:space-x-2 min-w-0 flex-1">
+                              <div className={`w-1.5 md:w-2 h-1.5 md:h-2 rounded-full flex-shrink-0 ${getFoodTypeColor(item.type)}`}></div>
+                              <span className="font-medium text-gray-900 truncate">{item.name}</span>
+                              <span className="text-xs text-gray-500 flex-shrink-0">x{item.quantity}</span>
                             </div>
-                            <span className="font-semibold text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</span>
+                            <span className="font-semibold text-gray-900 flex-shrink-0 ml-2">₹{(item.price * item.quantity).toFixed(2)}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
                     {/* Bill Details */}
-                    <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                    <div className="px-3 md:px-4 py-2 md:py-3 bg-gray-50 border-t border-gray-200">
                       <div className="space-y-1.5">
-                        <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center justify-between text-xs md:text-sm">
                           <span className="text-gray-600">Subtotal:</span>
                           <span className="font-medium text-gray-900">₹{bill.subtotal?.toFixed(2)}</span>
                         </div>
                         {bill.discount > 0 && (
-                          <div className="flex items-center justify-between text-sm text-green-600">
+                          <div className="flex items-center justify-between text-xs md:text-sm text-green-600">
                             <span>Discount ({bill.discount}%):</span>
                             <span>- ₹{((bill.subtotal * bill.discount) / 100).toFixed(2)}</span>
                           </div>
                         )}
                         <div className="flex items-center justify-between pt-2 border-t border-gray-300">
-                          <span className="text-base font-bold text-gray-900">Total:</span>
-                          <span className="text-xl font-bold text-[#ec2b25]">₹{bill.total?.toFixed(2)}</span>
+                          <span className="text-sm md:text-base font-bold text-gray-900">Total:</span>
+                          <span className="text-base md:text-xl font-bold text-[#ec2b25]">₹{bill.total?.toFixed(2)}</span>
                         </div>
                         {bill.status === 'paid' && bill.paymentMethod && (
                           <>
@@ -1343,23 +1343,23 @@ const BillingPage = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center space-x-2 mt-6">
+              <div className="flex items-center justify-center space-x-2 mt-4 md:mt-6">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="p-2 border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="p-1.5 md:p-2 border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 
-                <span className="text-sm text-gray-600">
+                <span className="text-xs md:text-sm text-gray-600">
                   Page {currentPage} of {totalPages}
                 </span>
                 
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="p-2 border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="p-1.5 md:p-2 border border-gray-200 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -1371,35 +1371,35 @@ const BillingPage = () => {
 
       {/* Remove Item Confirmation Modal */}
       {showRemoveModal && itemToRemove && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-md">
             <div className="mb-4">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-2">
                 Remove Item
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs md:text-sm text-gray-600">
                 Are you sure you want to remove all quantity of this item from the bill?
               </p>
             </div>
 
-            <div className="bg-gray-50 border border-gray-200 p-4 mb-4">
-              <div className="font-medium text-gray-900">{itemToRemove.name}</div>
-              <div className="text-sm text-gray-600 mt-1">
+            <div className="bg-gray-50 border border-gray-200 p-3 md:p-4 mb-4">
+              <div className="font-medium text-sm md:text-base text-gray-900">{itemToRemove.name}</div>
+              <div className="text-xs md:text-sm text-gray-600 mt-1">
                 Quantity: <span className="font-bold">{itemToRemove.quantity}</span>
               </div>
-              <div className="text-sm text-gray-600">
+              <div className="text-xs md:text-sm text-gray-600">
                 Total: <span className="font-bold">₹{(itemToRemove.price * itemToRemove.quantity).toFixed(2)}</span>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex space-x-3">
+            <div className="flex space-x-2 md:space-x-3">
               <button
                 onClick={() => {
                   setShowRemoveModal(false);
                   setItemToRemove(null);
                 }}
-                className="flex-1 px-4 py-2 border-2 border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+                className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base border-2 border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -1409,7 +1409,7 @@ const BillingPage = () => {
                   setShowRemoveModal(false);
                   setItemToRemove(null);
                 }}
-                className="flex-1 px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors cursor-pointer"
+                className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base bg-red-600 text-white hover:bg-red-700 transition-colors cursor-pointer"
               >
                 Yes, Remove
               </button>
@@ -1420,21 +1420,21 @@ const BillingPage = () => {
 
       {/* Platform Order ID Modal (Swiggy/Zomato) */}
       {showPlatformModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-md">
             <div className="mb-4">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-2">
                 {billType === 'swiggy' ? 'Swiggy' : 'Zomato'} Order Details
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs md:text-sm text-gray-600">
                 Please enter the order details
               </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {/* Platform Order ID */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   {billType === 'swiggy' ? 'Swiggy' : 'Zomato'} Order ID <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1442,14 +1442,14 @@ const BillingPage = () => {
                   value={platformOrderId}
                   onChange={(e) => setPlatformOrderId(e.target.value)}
                   placeholder={`Enter ${billType === 'swiggy' ? 'Swiggy' : 'Zomato'} order ID`}
-                  className="w-full px-3 py-2 border-2 border-gray-200 focus:outline-none focus:border-[#ec2b25]"
+                  className="w-full px-2 md:px-3 py-2 text-sm md:text-base border-2 border-gray-200 focus:outline-none focus:border-[#ec2b25]"
                   autoFocus
                 />
               </div>
 
               {/* Customer Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                   Customer Name <span className="text-gray-400">(Optional)</span>
                 </label>
                 <input
@@ -1457,19 +1457,19 @@ const BillingPage = () => {
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                   placeholder="Enter customer name"
-                  className="w-full px-3 py-2 border-2 border-gray-200 focus:outline-none focus:border-[#ec2b25]"
+                  className="w-full px-2 md:px-3 py-2 text-sm md:text-base border-2 border-gray-200 focus:outline-none focus:border-[#ec2b25]"
                 />
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex space-x-3 mt-6">
+            <div className="flex space-x-2 md:space-x-3 mt-4 md:mt-6">
               <button
                 onClick={() => {
                   setShowPlatformModal(false);
                   setPlatformOrderId('');
                 }}
-                className="flex-1 px-4 py-2 border-2 border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors"
+                className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base border-2 border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -1483,7 +1483,7 @@ const BillingPage = () => {
                   handleSaveBill();
                 }}
                 disabled={!platformOrderId.trim()}
-                className="flex-1 px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12520] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base bg-[#ec2b25] text-white hover:bg-[#d12520] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Continue
               </button>
@@ -1494,43 +1494,43 @@ const BillingPage = () => {
 
       {/* Payment Modal */}
       {showPaymentModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
-          <div className="bg-white w-full max-w-md mx-4">
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Complete Payment</h2>
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="bg-white w-full max-w-md">
+            <div className="p-4 md:p-6">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-4 md:mb-6">Complete Payment</h2>
               
-              <div className="space-y-4">
+              <div className="space-y-3 md:space-y-4">
                 {/* Bill Summary */}
-                <div className="bg-gray-50 border border-gray-200 p-4">
+                <div className="bg-gray-50 border border-gray-200 p-3 md:p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">Table:</span>
-                    <span className="font-medium">{selectedTable?.name}</span>
+                    <span className="text-xs md:text-sm text-gray-600">Table:</span>
+                    <span className="font-medium text-sm md:text-base">{selectedTable?.name}</span>
                   </div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">Customer:</span>
-                    <span className="font-medium">{customerName || 'Guest'}</span>
+                    <span className="text-xs md:text-sm text-gray-600">Customer:</span>
+                    <span className="font-medium text-sm md:text-base">{customerName || 'Guest'}</span>
                   </div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">Items:</span>
-                    <span className="font-medium">{billItems.length}</span>
+                    <span className="text-xs md:text-sm text-gray-600">Items:</span>
+                    <span className="font-medium text-sm md:text-base">{billItems.length}</span>
                   </div>
-                  <div className="border-t border-gray-300 mt-3 pt-3">
+                  <div className="border-t border-gray-300 mt-2 md:mt-3 pt-2 md:pt-3">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-lg">Total:</span>
-                      <span className="font-bold text-2xl text-[#ec2b25]">₹{calculateTotal()}</span>
+                      <span className="font-bold text-base md:text-lg">Total:</span>
+                      <span className="font-bold text-lg md:text-2xl text-[#ec2b25]">₹{calculateTotal()}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Payment Method */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                     Payment Method
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     <button
                       onClick={() => setPaymentMethod('cash')}
-                      className={`px-4 py-2 border cursor-pointer ${
+                      className={`px-2 md:px-4 py-2 text-xs md:text-sm border cursor-pointer ${
                         paymentMethod === 'cash'
                           ? 'border-[#ec2b25] bg-[#ec2b25] text-white'
                           : 'border-gray-200 hover:bg-gray-100'
@@ -1540,7 +1540,7 @@ const BillingPage = () => {
                     </button>
                     <button
                       onClick={() => setPaymentMethod('card')}
-                      className={`px-4 py-2 border cursor-pointer ${
+                      className={`px-2 md:px-4 py-2 text-xs md:text-sm border cursor-pointer ${
                         paymentMethod === 'card'
                           ? 'border-[#ec2b25] bg-[#ec2b25] text-white'
                           : 'border-gray-200 hover:bg-gray-100'
@@ -1550,7 +1550,7 @@ const BillingPage = () => {
                     </button>
                     <button
                       onClick={() => setPaymentMethod('upi')}
-                      className={`px-4 py-2 border cursor-pointer ${
+                      className={`px-2 md:px-4 py-2 text-xs md:text-sm border cursor-pointer ${
                         paymentMethod === 'upi'
                           ? 'border-[#ec2b25] bg-[#ec2b25] text-white'
                           : 'border-gray-200 hover:bg-gray-100'
@@ -1563,7 +1563,7 @@ const BillingPage = () => {
 
                 {/* Amount Received */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                     Amount Received
                   </label>
                   <input
@@ -1571,16 +1571,16 @@ const BillingPage = () => {
                     value={amountReceived}
                     onChange={(e) => setAmountReceived(e.target.value)}
                     placeholder="Enter amount"
-                    className="w-full px-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25]"
+                    className="w-full px-2 md:px-3 py-2 text-sm md:text-base border border-gray-200 focus:outline-none focus:border-[#ec2b25]"
                   />
                 </div>
 
                 {/* Change */}
                 {amountReceived && parseFloat(amountReceived) >= calculateTotal() && (
-                  <div className="bg-green-50 border border-green-200 p-3">
+                  <div className="bg-green-50 border border-green-200 p-2 md:p-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-green-700">Change to return:</span>
-                      <span className="font-bold text-green-700">
+                      <span className="text-xs md:text-sm text-green-700">Change to return:</span>
+                      <span className="font-bold text-sm md:text-base text-green-700">
                         ₹{(parseFloat(amountReceived) - calculateTotal()).toFixed(2)}
                       </span>
                     </div>
@@ -1589,18 +1589,18 @@ const BillingPage = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex space-x-3 mt-6">
+              <div className="flex space-x-2 md:space-x-3 mt-4 md:mt-6">
                 <button
                   onClick={() => setShowPaymentModal(false)}
                   disabled={processing}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 text-gray-700 hover:bg-gray-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={completePayment}
                   disabled={processing || !amountReceived || parseFloat(amountReceived) < calculateTotal()}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white hover:bg-green-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base bg-green-600 text-white hover:bg-green-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                 >
                   {processing ? (
                     <>

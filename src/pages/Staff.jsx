@@ -183,30 +183,30 @@ const Staff = () => {
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Staff Management</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Staff Management</h1>
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center space-x-2 px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer"
+          className="flex items-center justify-center space-x-1 md:space-x-2 px-3 md:px-4 py-2 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer text-sm md:text-base w-full sm:w-auto"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3 md:w-4 h-3 md:h-4" />
           <span>Add Staff</span>
         </button>
       </div>
 
       {/* Staff List Section */}
-      <div className="bg-white border border-gray-200 p-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Staff List</h2>
+      <div className="bg-white border border-gray-200 p-3 md:p-6">
+        <h2 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">Staff List</h2>
         {loading ? (
-          <div className="text-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-[#ec2b25] mx-auto" />
+          <div className="text-center py-6 md:py-8">
+            <Loader2 className="w-6 md:w-8 h-6 md:h-8 animate-spin text-[#ec2b25] mx-auto" />
           </div>
         ) : staffList.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">No staff members found.</div>
+          <div className="text-center py-6 md:py-8 text-sm md:text-base text-gray-500">No staff members found.</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
             {staffList.map(staff => (
-              <div key={staff.id} className="border-2 border-gray-200 bg-white hover:border-[#ec2b25] transition-all p-4 relative">
+              <div key={staff.id} className="border-2 border-gray-200 bg-white hover:border-[#ec2b25] transition-all p-3 md:p-4 relative">
                 <div className="absolute top-2 right-2 flex gap-2">
                   <button 
                     onClick={() => handleOpenModal(staff)} 
