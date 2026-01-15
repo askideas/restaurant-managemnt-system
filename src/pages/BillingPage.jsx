@@ -22,6 +22,7 @@ const BillingPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [itemSearchQuery, setItemSearchQuery] = useState(''); // Search items by name, shortCode, price
   const [billItems, setBillItems] = useState([]);
   const [customerName, setCustomerName] = useState('');
   const [saving, setSaving] = useState(false);
@@ -213,10 +214,20 @@ const BillingPage = () => {
     ? tables 
     : tables.filter(table => table.floorId === selectedFloor);
 
-  // Filter items by category
-  const filteredItems = selectedCategory 
-    ? items.filter(item => item.categoryId === selectedCategory)
-    : items;
+  // Filter items by category and search query
+  const filteredItems = items.filter(item => {
+    // Category filter
+    const categoryMatch = selectedCategory ? item.categoryId === selectedCategory : true;
+    
+    // Search filter (by name, shortCode, or price)
+    const searchLower = itemSearchQuery.toLowerCase().trim();
+    const searchMatch = searchLower === '' || 
+      item.name.toLowerCase().includes(searchLower) ||
+      (item.shortCode && item.shortCode.toLowerCase().includes(searchLower)) ||
+      item.price.toString().includes(searchLower);
+    
+    return categoryMatch && searchMatch;
+  });
 
   // Filter categories by search
   const searchFilteredCategories = categories.filter(cat =>
@@ -1120,9 +1131,10 @@ const BillingPage = () => {
             <div className="lg:border-r border-gray-200 lg:pr-6">
               <h3 className="text-base md:text-lg font-bold text-gray-900 mb-3 md:mb-4">Select Items</h3>
               
-              {/* Category Dropdown */}
-              <div className="mb-3 md:mb-4">
-                <div className="relative">
+              {/* Category Dropdown and Item Search */}
+              <div className="flex flex-col sm:flex-row gap-2 mb-3 md:mb-4">
+                {/* Category Dropdown */}
+                <div className="relative flex-1 sm:flex-initial sm:w-1/2">
                   <button
                     onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
                     className="w-full px-2 md:px-3 py-2 border border-gray-200 flex items-center justify-between hover:border-gray-300 cursor-pointer"
@@ -1177,6 +1189,26 @@ const BillingPage = () => {
                         ))}
                       </div>
                     </div>
+                  )}
+                </div>
+                
+                {/* Item Search */}
+                <div className="relative flex-1 sm:flex-initial sm:w-1/2">
+                  <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={itemSearchQuery}
+                    onChange={(e) => setItemSearchQuery(e.target.value)}
+                    placeholder="Search by name, code, price..."
+                    className="w-full pl-8 md:pl-9 pr-2 md:pr-3 py-2 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-xs md:text-sm"
+                  />
+                  {itemSearchQuery && (
+                    <button
+                      onClick={() => setItemSearchQuery('')}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   )}
                 </div>
               </div>
