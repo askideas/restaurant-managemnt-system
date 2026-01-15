@@ -44,9 +44,10 @@
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
-    width: 80mm !important;
+    width: 100% !important;
+    max-width: 100% !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 4mm !important;
     display: block !important;
     background: white !important;
     color: black !important;

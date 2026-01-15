@@ -26,7 +26,9 @@ const BillingPage = () => {
   const [customerName, setCustomerName] = useState('');
   const [saving, setSaving] = useState(false);
   const [currentBillId, setCurrentBillId] = useState(null);
-  const [billType, setBillType] = useState('dine-in'); // 'dine-in' or 'take-away'
+  const [currentOrderId, setCurrentOrderId] = useState(null);
+  const [billType, setBillType] = useState('dine-in'); // 'dine-in', 'take-away', 'swiggy', 'zomato'
+  const [discount, setDiscount] = useState(0);
   
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,6 +42,8 @@ const BillingPage = () => {
   const [processing, setProcessing] = useState(false);
 
   const printRef = useRef();
+  const itemsListRef = useRef();
+  const addBillSectionRef = useRef();
 
   // Fetch all data
   useEffect(() => {
@@ -193,6 +197,13 @@ const BillingPage = () => {
         return [...prev, { ...item, quantity: 1, kotSent: false, pendingKotQty: 1 }];
       }
     });
+    
+    // Scroll to end of items list
+    setTimeout(() => {
+      if (itemsListRef.current) {
+        itemsListRef.current.scrollTop = itemsListRef.current.scrollHeight;
+      }
+    }, 100);
   };
 
   // Update item quantity
@@ -215,12 +226,58 @@ const BillingPage = () => {
 
   // Calculate total
   const calculateTotal = () => {
+    const subtotal = billItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const discountAmount = (subtotal * discount) / 100;
+    return subtotal - discountAmount;
+  };
+
+  const calculateSubtotal = () => {
     return billItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  };
+
+  // Generate custom order ID: #O-DDMMYYYY-N
+  const generateOrderId = async () => {
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('en-GB').split('/').join(''); // DDMMYYYY
+    
+    // Count orders created today
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+    
+    const q = query(
+      collection(db, 'orders'),
+      where('createdAt', '>=', startOfDay),
+      where('createdAt', '<=', endOfDay)
+    );
+    const snapshot = await getDocs(q);
+    const orderNumber = snapshot.size + 1;
+    
+    return `#O-${dateStr}-${orderNumber}`;
+  };
+
+  // Generate custom bill ID: #B-DDMMYYYY-N
+  const generateBillId = async () => {
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('en-GB').split('/').join(''); // DDMMYYYY
+    
+    // Count bills created today
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+    
+    const q = query(
+      collection(db, 'bills'),
+      where('createdAt', '>=', startOfDay),
+      where('createdAt', '<=', endOfDay)
+    );
+    const snapshot = await getDocs(q);
+    const billNumber = snapshot.size + 1;
+    
+    return `#B-${dateStr}-${billNumber}`;
   };
 
   // Save bill
   const handleSaveBill = async () => {
-    if (billType === 'dine-in' && !selectedTable) {
+    if ((billType === 'dine-in') && !selectedTable) {
       toast.error('Please select a table');
       return;
     }
@@ -249,52 +306,74 @@ const BillingPage = () => {
         }
         return item;
       });
+
+      const subtotal = calculateSubtotal();
+      const total = calculateTotal();
+      
       const billData = {
         customerName: customerName || 'Guest',
         items: updatedItems,
-        subtotal: calculateTotal(),
-        total: calculateTotal(),
+        subtotal: subtotal,
+        discount: discount,
+        total: total,
         status: 'open',
         type: billType,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-      if (billType === 'dine-in' && selectedTable) {
+      
+      if ((billType === 'dine-in') && selectedTable) {
         billData.tableId = selectedTable.id;
         billData.tableName = selectedTable.name;
       }
+
+      let billDocId = currentBillId;
+      
       if (currentBillId) {
         await updateDoc(doc(db, 'bills', currentBillId), {
           ...billData,
           updatedAt: new Date().toISOString()
         });
-        toast.success('Order sent to KOT!');
       } else {
+        const billId = await generateBillId();
+        billData.billId = billId;
         const docRef = await addDoc(collection(db, 'bills'), billData);
+        billDocId = docRef.id;
         setCurrentBillId(docRef.id);
-        toast.success('Order sent to KOT!');
       }
+      
       setBillItems(updatedItems);
       fetchBills(1);
       fetchTotalBillsCount();
 
       // --- Create order(s) in 'orders' collection for new KOT items ---
       if (itemsToOrder.length > 0) {
+        const orderId = await generateOrderId();
         const orderPayload = {
+          orderId: orderId,
+          billDocId: billDocId,
           customerName: customerName || 'Guest',
           items: itemsToOrder.map(i => ({ ...i, quantity: i.pendingKotQty || 0 })),
           subtotal: itemsToOrder.reduce((sum, item) => sum + (item.price * (item.pendingKotQty || 0)), 0),
           total: itemsToOrder.reduce((sum, item) => sum + (item.price * (item.pendingKotQty || 0)), 0),
-          status: 'open',
+          status: 'pending',
           type: billType,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
-        if (billType === 'dine-in' && selectedTable) {
+        if ((billType === 'dine-in') && selectedTable) {
           orderPayload.tableId = selectedTable.id;
           orderPayload.tableName = selectedTable.name;
         }
-        await addDoc(collection(db, 'orders'), orderPayload);
+        const orderDoc = await addDoc(collection(db, 'orders'), orderPayload);
+        setCurrentOrderId(orderDoc.id);
+        
+        // Update bill with latest orderId
+        await updateDoc(doc(db, 'bills', billDocId), {
+          orderId: orderDoc.id
+        });
+        
+        toast.success('Order sent to KOT!');
       }
     } catch (error) {
       console.error('Error saving bill:', error);
@@ -366,6 +445,14 @@ const BillingPage = () => {
         updatedAt: new Date().toISOString()
       });
 
+      // Cancel associated order if exists
+      if (currentOrderId) {
+        await updateDoc(doc(db, 'orders', currentOrderId), {
+          status: 'completed',
+          updatedAt: new Date().toISOString()
+        });
+      }
+
       toast.success('Payment completed successfully!');
       setShowPaymentModal(false);
       
@@ -381,6 +468,39 @@ const BillingPage = () => {
     }
   };
 
+  // Cancel order
+  const handleCancelOrder = async () => {
+    if (!currentOrderId) {
+      toast.error('No active order to cancel');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to cancel this order?')) {
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, 'orders', currentOrderId), {
+        status: 'cancelled',
+        updatedAt: new Date().toISOString()
+      });
+
+      if (currentBillId) {
+        await updateDoc(doc(db, 'bills', currentBillId), {
+          status: 'cancelled',
+          updatedAt: new Date().toISOString()
+        });
+      }
+
+      toast.success('Order cancelled successfully');
+      resetBillForm();
+      fetchBills(1);
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      toast.error('Failed to cancel order');
+    }
+  };
+
   // Reset bill form
   const resetBillForm = () => {
     setSelectedTable(null);
@@ -390,9 +510,44 @@ const BillingPage = () => {
     setCustomerName('');
     setSearchQuery('');
     setCurrentBillId(null);
+    setCurrentOrderId(null);
     setAmountReceived('');
     setPaymentMethod('cash');
     setBillType('dine-in');
+    setDiscount(0);
+  };
+
+  // Load bill for editing
+  const loadBillForEditing = async (bill) => {
+    // Scroll to add bill section
+    setShowAddBill(true);
+    setTimeout(() => {
+      if (addBillSectionRef.current) {
+        addBillSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+
+    // Load bill data
+    setBillItems(bill.items || []);
+    setCustomerName(bill.customerName || '');
+    setCurrentBillId(bill.id);
+    setCurrentOrderId(bill.orderId || null);
+    setBillType(bill.type || 'dine-in');
+    setDiscount(bill.discount || 0);
+
+    // Load table if dine-in
+    if (bill.type === 'dine-in' && bill.tableId) {
+      const table = tables.find(t => t.id === bill.tableId);
+      if (table) {
+        setSelectedTable(table);
+        const tableFloor = floors.find(f => f.id === table.floorId);
+        if (tableFloor) {
+          setSelectedFloor(tableFloor.id);
+        }
+      }
+    }
+
+    toast.success('Bill loaded for editing');
   };
 
   // Pagination
@@ -435,6 +590,20 @@ const BillingPage = () => {
               >
                 Take Away
               </button>
+              <button
+                type="button"
+                onClick={() => setBillType('swiggy')}
+                className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${billType === 'swiggy' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
+              >
+                Swiggy
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillType('zomato')}
+                className={`px-3 py-1 rounded border text-sm font-medium transition-colors ${billType === 'zomato' ? 'bg-[#ec2b25] text-white border-[#ec2b25]' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'}`}
+              >
+                Zomato
+              </button>
             </div>
             <button
               onClick={() => setShowAddBill(!showAddBill)}
@@ -458,9 +627,9 @@ const BillingPage = () => {
 
       {/* Add Bill Section */}
       {showAddBill && (
-        <div className="bg-white border border-gray-200 p-6">
+        <div ref={addBillSectionRef} className="bg-white border border-gray-200 p-6">
           <div className="grid grid-cols-3 gap-6">
-            {/* Column 1: Tables Selection */}
+            {/* Column 1: Tables Selection or Customer Name */}
             {billType === 'dine-in' && (
               <div className="border-r border-gray-200 pr-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Select Table</h3>
@@ -534,9 +703,10 @@ const BillingPage = () => {
                 )}
               </div>
             )}
-            {billType === 'take-away' && (
+            {(billType === 'take-away' || billType === 'swiggy' || billType === 'zomato') && (
               <div className="pr-6">
-                {/* Customer Name for Take Away */}
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Customer Details</h3>
+                {/* Customer Name for Take Away/Swiggy/Zomato */}
                 <div className="mb-4">
                   <input
                     type="text"
@@ -615,7 +785,7 @@ const BillingPage = () => {
               </div>
 
               {/* Items List */}
-              <div className="space-y-2 max-h-96 overflow-y-auto">
+              <div ref={itemsListRef} className="space-y-2 max-h-96 overflow-y-auto">
                 {filteredItems.map(item => (
                   <button
                     key={item.id}
@@ -684,16 +854,41 @@ const BillingPage = () => {
                 )}
               </div>
 
-              {/* Total */}
+              {/* Subtotal, Discount, and Total */}
               <div className="border-t-2 border-gray-900 pt-4 mb-4">
+                <div className="flex items-center justify-between mb-2 text-sm">
+                  <span className="text-gray-700">Subtotal:</span>
+                  <span className="font-medium">₹{calculateSubtotal()}</span>
+                </div>
+                
+                {/* Discount Input */}
                 <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-700">Discount (%):</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={discount}
+                    onChange={(e) => setDiscount(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+                    className="w-20 px-2 py-1 border border-gray-200 focus:outline-none focus:border-[#ec2b25] text-sm text-right"
+                  />
+                </div>
+                
+                {discount > 0 && (
+                  <div className="flex items-center justify-between mb-2 text-sm text-green-600">
+                    <span>Discount Amount:</span>
+                    <span>- ₹{((calculateSubtotal() * discount) / 100).toFixed(2)}</span>
+                  </div>
+                )}
+                
+                <div className="flex items-center justify-between mb-2 pt-2 border-t border-gray-300">
                   <span className="text-lg font-bold">Total:</span>
-                  <span className="text-2xl font-bold text-[#ec2b25]">₹{calculateTotal()}</span>
+                  <span className="text-2xl font-bold text-[#ec2b25]">₹{calculateTotal().toFixed(2)}</span>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2 mb-2">
                 <button
                   onClick={handleSaveBill}
                   disabled={saving}
@@ -727,6 +922,17 @@ const BillingPage = () => {
                   <span className="text-xs">Payment</span>
                 </button>
               </div>
+              
+              {/* Cancel Order Button */}
+              {currentOrderId && (
+                <button
+                  onClick={handleCancelOrder}
+                  className="w-full mt-2 flex items-center justify-center space-x-2 px-4 py-2 border border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                  <span className="text-sm font-medium">Cancel Order</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -743,84 +949,132 @@ const BillingPage = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {bills.map(bill => (
-                <div key={bill.id} className="border border-gray-200 p-4 hover:border-gray-300 cursor-pointer">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="font-bold text-gray-900">{bill.tableName}</p>
-                      <p className="text-sm text-gray-500">{bill.customerName}</p>
+              {bills.map(bill => {
+                const getBillTypeColor = (type) => {
+                  switch(type) {
+                    case 'dine-in': return 'bg-blue-100 text-blue-800 border-blue-300';
+                    case 'take-away': return 'bg-purple-100 text-purple-800 border-purple-300';
+                    case 'swiggy': return 'bg-orange-100 text-orange-800 border-orange-300';
+                    case 'zomato': return 'bg-red-100 text-red-800 border-red-300';
+                    default: return 'bg-gray-100 text-gray-800 border-gray-300';
+                  }
+                };
+                
+                const getBillTypeLabel = (type) => {
+                  switch(type) {
+                    case 'dine-in': return 'Dine In';
+                    case 'take-away': return 'Take Away';
+                    case 'swiggy': return 'Swiggy';
+                    case 'zomato': return 'Zomato';
+                    default: return type;
+                  }
+                };
+                
+                return (
+                  <div 
+                    key={bill.id} 
+                    onClick={() => bill.status === 'open' && loadBillForEditing(bill)}
+                    className={`border-2 border-gray-200 bg-white hover:shadow-lg transition-all ${bill.status === 'open' ? 'cursor-pointer hover:border-[#ec2b25]' : 'cursor-default'}`}
+                  >
+                    {/* Header */}
+                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-3 py-1 text-xs font-bold border ${getBillTypeColor(bill.type)}`}>
+                            {getBillTypeLabel(bill.type)}
+                          </span>
+                          {bill.billId && (
+                            <span className="text-xs font-mono font-semibold text-gray-700">{bill.billId}</span>
+                          )}
+                        </div>
+                        <span className={`px-2 py-1 text-xs font-bold uppercase ${
+                          bill.status === 'open' 
+                            ? 'bg-orange-500 text-white' 
+                            : bill.status === 'paid' 
+                            ? 'bg-green-600 text-white' 
+                            : 'bg-gray-500 text-white'
+                        }`}>
+                          {bill.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          {bill.tableName && <p className="font-bold text-gray-900">{bill.tableName}</p>}
+                          <p className="text-sm text-gray-600">{bill.customerName}</p>
+                        </div>
+                      </div>
                     </div>
-                    <span className={`px-2 py-1 text-xs font-medium ${
-                      bill.status === 'open' 
-                        ? 'bg-orange-100 text-orange-800' 
-                        : bill.status === 'paid' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {bill.status}
-                    </span>
-                  </div>
 
-                  {/* Items List */}
-                  <div className="mb-3 max-h-40 overflow-y-auto">
-                    <p className="text-xs font-medium text-gray-700 mb-1">Items:</p>
-                    <div className="space-y-1">
-                      {bill.items.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between text-xs bg-gray-50 p-1.5 border border-gray-100">
-                          <div className="flex items-center space-x-1.5">
-                            <div className={`w-1.5 h-1.5 rounded-full ${getFoodTypeColor(item.type)}`}></div>
-                            <span className="font-medium">{item.name}</span>
-                            <span className="text-gray-500">x{item.quantity}</span>
+                    {/* Items List */}
+                    <div className="px-4 py-3 max-h-40 overflow-y-auto">
+                      <div className="space-y-1.5">
+                        {bill.items.map((item, index) => (
+                          <div key={index} className="flex items-center justify-between text-sm bg-gray-50 p-2 border border-gray-200">
+                            <div className="flex items-center space-x-2">
+                              <div className={`w-2 h-2 rounded-full ${getFoodTypeColor(item.type)}`}></div>
+                              <span className="font-medium text-gray-900">{item.name}</span>
+                              <span className="text-xs text-gray-500">x{item.quantity}</span>
+                            </div>
+                            <span className="font-semibold text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</span>
                           </div>
-                          <span className="font-medium text-gray-900">₹{item.price * item.quantity}</span>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Bill Details */}
-                  <div className="border-t border-gray-200 pt-2 space-y-1 mb-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-600">Subtotal:</span>
-                      <span className="font-medium">₹{bill.subtotal}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm font-bold">
-                      <span>Total:</span>
-                      <span className="text-[#ec2b25]">₹{bill.total}</span>
-                    </div>
-                    {bill.status === 'paid' && bill.paymentMethod && (
-                      <>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-600">Payment:</span>
-                          <span className="font-medium uppercase">{bill.paymentMethod}</span>
+                    {/* Bill Details */}
+                    <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">Subtotal:</span>
+                          <span className="font-medium text-gray-900">₹{bill.subtotal?.toFixed(2)}</span>
                         </div>
-                        {bill.amountReceived && (
+                        {bill.discount > 0 && (
+                          <div className="flex items-center justify-between text-sm text-green-600">
+                            <span>Discount ({bill.discount}%):</span>
+                            <span>- ₹{((bill.subtotal * bill.discount) / 100).toFixed(2)}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-300">
+                          <span className="text-base font-bold text-gray-900">Total:</span>
+                          <span className="text-xl font-bold text-[#ec2b25]">₹{bill.total?.toFixed(2)}</span>
+                        </div>
+                        {bill.status === 'paid' && bill.paymentMethod && (
                           <>
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-gray-600">Received:</span>
-                              <span className="font-medium">₹{bill.amountReceived}</span>
+                              <span className="text-gray-600">Payment:</span>
+                              <span className="font-medium uppercase">{bill.paymentMethod}</span>
                             </div>
-                            {bill.change > 0 && (
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-gray-600">Change:</span>
-                                <span className="font-medium text-green-600">₹{bill.change.toFixed(2)}</span>
-                              </div>
+                            {bill.amountReceived && (
+                              <>
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-gray-600">Received:</span>
+                                  <span className="font-medium">₹{bill.amountReceived}</span>
+                                </div>
+                                {bill.change > 0 && (
+                                  <div className="flex items-center justify-between text-xs">
+                                    <span className="text-gray-600">Change:</span>
+                                    <span className="font-medium text-green-600">₹{bill.change.toFixed(2)}</span>
+                                  </div>
+                                )}
+                              </>
                             )}
                           </>
                         )}
-                      </>
-                    )}
-                  </div>
+                      </div>
+                    </div>
 
-                  {/* Footer */}
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{new Date(bill.createdAt).toLocaleString()}</span>
-                    {bill.status === 'paid' && bill.paidAt && (
-                      <span className="text-green-600">Paid: {new Date(bill.paidAt).toLocaleTimeString()}</span>
-                    )}
+                    {/* Footer */}
+                    <div className="px-4 py-2 bg-white border-t border-gray-200">
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{new Date(bill.createdAt).toLocaleString('en-IN')}</span>
+                        {bill.status === 'paid' && bill.paidAt && (
+                          <span className="text-green-600 font-medium">Paid: {new Date(bill.paidAt).toLocaleTimeString('en-IN')}</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Pagination */}
