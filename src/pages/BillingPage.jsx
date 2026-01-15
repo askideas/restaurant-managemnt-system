@@ -197,13 +197,6 @@ const BillingPage = () => {
         return [...prev, { ...item, quantity: 1, kotSent: false, pendingKotQty: 1 }];
       }
     });
-    
-    // Scroll to end of items list
-    setTimeout(() => {
-      if (itemsListRef.current) {
-        itemsListRef.current.scrollTop = itemsListRef.current.scrollHeight;
-      }
-    }, 100);
   };
 
   // Update item quantity
@@ -223,28 +216,25 @@ const BillingPage = () => {
   const removeItemFromBill = async (itemId) => {
     const itemToRemove = billItems.find(bi => bi.id === itemId);
     
-    if (itemToRemove && itemToRemove.orderIds && itemToRemove.orderIds.length > 0) {
+    if (!itemToRemove) return;
+
+    try {
       // Cancel all orders associated with this item
-      try {
+      if (itemToRemove.orderIds && itemToRemove.orderIds.length > 0) {
         await Promise.all(itemToRemove.orderIds.map(async (order) => {
           await updateDoc(doc(db, 'orders', order.orderDocId), {
             status: 'cancelled',
             updatedAt: new Date().toISOString()
           });
         }));
-        toast.success('Item and associated orders cancelled');
-      } catch (error) {
-        console.error('Error cancelling orders:', error);
-        toast.error('Failed to cancel orders');
       }
-    }
-    
-    setBillItems(billItems.filter(bi => bi.id !== itemId));
-    
-    // Update bill in database if it exists
-    if (currentBillId) {
-      try {
-        const updatedItems = billItems.filter(bi => bi.id !== itemId);
+      
+      // Remove item from bill items
+      const updatedItems = billItems.filter(bi => bi.id !== itemId);
+      setBillItems(updatedItems);
+      
+      // Update bill in database if it exists
+      if (currentBillId) {
         const subtotal = updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
         const discountAmount = (subtotal * discount) / 100;
         const total = subtotal - discountAmount;
@@ -255,9 +245,17 @@ const BillingPage = () => {
           total: total,
           updatedAt: new Date().toISOString()
         });
-      } catch (error) {
-        console.error('Error updating bill:', error);
+        
+        // Refresh bills list
+        fetchBills(currentPage);
+        
+        toast.success('Item removed and bill updated');
+      } else {
+        toast.success('Item removed from bill');
       }
+    } catch (error) {
+      console.error('Error removing item:', error);
+      toast.error('Failed to remove item');
     }
   };
 
