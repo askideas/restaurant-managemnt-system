@@ -5,6 +5,7 @@ export const MENU_ITEMS = [
   { label: 'Tables', value: 'tables', path: '/tables', icon: 'Grid3x3' },
   { label: 'Orders', value: 'orders', path: '/orders', icon: 'ChefHat' },
   { label: 'Investment', value: 'investment', path: '/investment', icon: 'Package' },
+  { label: 'Payroll', value: 'payroll', path: '/payroll', icon: 'Wallet' },
   { label: 'Staff', value: 'staff', path: '/staff', icon: 'Users' }
 ];
 

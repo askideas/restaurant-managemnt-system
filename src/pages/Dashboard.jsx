@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { TrendingUp, TrendingDown, ShoppingCart, FileText, XCircle, Package, IndianRupee, Calendar, ChevronDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, ShoppingCart, FileText, XCircle, Package, IndianRupee, Calendar, ChevronDown, Wallet } from 'lucide-react';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
     totalRevenue: 0,
     totalInvestment: 0,
+    totalPayroll: 0,
     profitLoss: 0,
     profitPercentage: 0,
     totalOrders: 0,
@@ -154,15 +155,24 @@ const Dashboard = () => {
       const allInvestments = investmentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const investments = allInvestments.filter(inv => isDateInRange(inv.date, startDate, endDate));
 
+      // Fetch payrolls
+      const payrollsSnap = await getDocs(collection(db, 'payrolls'));
+      const allPayrolls = payrollsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const payrolls = allPayrolls.filter(payroll => isDateInRange(payroll.createdAt, startDate, endDate));
+
       // Calculate total revenue from bills
       const totalRevenue = bills.reduce((sum, bill) => sum + (parseFloat(bill.total) || 0), 0);
       
       // Calculate total investment
       const totalInvestment = investments.reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
       
-      // Calculate profit/loss
-      const profitLoss = totalRevenue - totalInvestment;
-      const profitPercentage = totalInvestment > 0 ? ((profitLoss / totalInvestment) * 100) : 0;
+      // Calculate total payroll
+      const totalPayroll = payrolls.reduce((sum, payroll) => sum + (parseFloat(payroll.salary) || 0), 0);
+      
+      // Calculate profit/loss (Revenue - Investment - Payroll)
+      const profitLoss = totalRevenue - totalInvestment - totalPayroll;
+      const totalExpenses = totalInvestment + totalPayroll;
+      const profitPercentage = totalExpenses > 0 ? ((profitLoss / totalExpenses) * 100) : 0;
 
       // Count cancelled orders
       const cancelledOrders = orders.filter(order => order.status === 'cancelled').length;
@@ -190,6 +200,7 @@ const Dashboard = () => {
       setStats({
         totalRevenue,
         totalInvestment,
+        totalPayroll,
         profitLoss,
         profitPercentage,
         totalOrders: orders.length,
@@ -332,7 +343,7 @@ const Dashboard = () => {
       </div>
 
       {/* Main Financial Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Total Revenue */}
         <div className="bg-white border-2 border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
@@ -355,6 +366,18 @@ const Dashboard = () => {
           <h3 className="text-gray-600 text-sm font-medium mb-1">Total Investment</h3>
           <p className="text-3xl font-bold text-gray-900">{formatCurrency(stats.totalInvestment)}</p>
           <p className="text-sm text-gray-500 mt-2">Total expenses</p>
+        </div>
+
+        {/* Total Payroll */}
+        <div className="bg-white border-2 border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-3 bg-purple-100">
+              <Wallet className="w-6 h-6 text-purple-600" />
+            </div>
+          </div>
+          <h3 className="text-gray-600 text-sm font-medium mb-1">Total Payroll</h3>
+          <p className="text-3xl font-bold text-gray-900">{formatCurrency(stats.totalPayroll)}</p>
+          <p className="text-sm text-gray-500 mt-2">Staff salaries</p>
         </div>
 
         {/* Profit/Loss */}

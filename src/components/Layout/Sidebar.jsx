@@ -10,7 +10,8 @@ import {
   BarChart3,
   Package, 
   Users,
-  Settings
+  Settings,
+  Wallet
 } from 'lucide-react';
 import { MENU_ITEMS, RESTAURANT_NAME } from '../../data/menuData';
 import { useAuth } from '../../context/AuthContext';
@@ -29,7 +30,8 @@ const Sidebar = () => {
     BarChart3,
     Package,
     Users,
-    Settings
+    Settings,
+    Wallet
   };
 
   // Filter menu items based on user access

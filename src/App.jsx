@@ -13,6 +13,7 @@ import MenuPage from './pages/MenuPage';
 import TablesPage from './pages/TablesPage';
 import Orders from './pages/Orders';
 import Investment from './pages/Investment';
+import Payroll from './pages/Payroll';
 import Staff from './pages/Staff';
 
 const App = () => {
@@ -100,6 +101,14 @@ const App = () => {
                             element={
                               <ProtectedRoute menuValue="investment">
                                 <Investment />
+                              </ProtectedRoute>
+                            } 
+                          />
+                          <Route 
+                            path="/payroll" 
+                            element={
+                              <ProtectedRoute menuValue="payroll">
+                                <Payroll />
                               </ProtectedRoute>
                             } 
                           />
