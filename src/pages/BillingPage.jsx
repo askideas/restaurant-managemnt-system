@@ -38,6 +38,11 @@ const BillingPage = () => {
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [itemToRemove, setItemToRemove] = useState(null);
   
+  // Multiple Bills per Table States
+  const [showTableBillsModal, setShowTableBillsModal] = useState(false);
+  const [tableBills, setTableBills] = useState([]);
+  const [pendingTable, setPendingTable] = useState(null);
+  
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const [totalBills, setTotalBills] = useState(0);
@@ -245,8 +250,8 @@ const BillingPage = () => {
 
   const selectedCategoryData = categories.find(cat => cat.id === selectedCategory);
 
-  // Load open bill for selected table
-  const loadOpenBillForTable = async (table) => {
+  // Load open bills for selected table
+  const loadOpenBillsForTable = async (table) => {
     try {
       const q = query(
         collection(db, 'bills'),
@@ -256,34 +261,53 @@ const BillingPage = () => {
       const querySnapshot = await getDocs(q);
       
       if (!querySnapshot.empty) {
-        const billDoc = querySnapshot.docs[0];
-        const billData = { id: billDoc.id, ...billDoc.data() };
-        
-        // Load bill data into form
-        setBillItems(billData.items);
-        setCustomerName(billData.customerName);
-        setCurrentBillId(billDoc.id);
-        setDisplayBillId(billData.billId || null); // Load the display bill ID
-        setDiscount(billData.discount || 0);
-        setSavedDiscount(billData.discount || 0);
-        toast.success('Loaded open bill for this table');
+        const openBills = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setTableBills(openBills);
+        setPendingTable(table);
+        setShowTableBillsModal(true);
       } else {
-        // No open bill, reset form
-        setBillItems([]);
-        setCustomerName('');
-        setCurrentBillId(null);
-        setDisplayBillId(null);
+        // No open bills, start a new bill
+        startNewBillForTable(table);
       }
     } catch (error) {
-      console.error('Error loading open bill:', error);
-      toast.error('Failed to load open bill');
+      console.error('Error loading open bills:', error);
+      toast.error('Failed to load open bills');
     }
+  };
+
+  // Start a new bill for table
+  const startNewBillForTable = (table) => {
+    setSelectedTable(table);
+    setBillItems([]);
+    setCustomerName('');
+    setCurrentBillId(null);
+    setDisplayBillId(null);
+    setDiscount(0);
+    setSavedDiscount(0);
+    setShowTableBillsModal(false);
+    setPendingTable(null);
+    setTableBills([]);
+    toast.success(`New bill started for ${table.name}`);
+  };
+
+  // Load specific bill for editing from modal
+  const loadSpecificBill = (bill, table) => {
+    setSelectedTable(table);
+    setBillItems(bill.items || []);
+    setCustomerName(bill.customerName || '');
+    setCurrentBillId(bill.id);
+    setDisplayBillId(bill.billId || null);
+    setDiscount(bill.discount || 0);
+    setSavedDiscount(bill.discount || 0);
+    setShowTableBillsModal(false);
+    setPendingTable(null);
+    setTableBills([]);
+    toast.success(`Loaded bill ${bill.billId || 'for editing'}`);
   };
 
   // Handle table selection
   const handleTableSelect = (table) => {
-    setSelectedTable(table);
-    loadOpenBillForTable(table);
+    loadOpenBillsForTable(table);
   };
 
   // Add item to bill
@@ -1108,22 +1132,24 @@ const BillingPage = () => {
                 {/* Tables Grid */}
                 <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
                   {filteredTables.map(table => {
-                    const hasOpenBill = bills.some(bill => bill.tableId === table.id && bill.status === 'open');
+                    const openBillsCount = bills.filter(bill => bill.tableId === table.id && bill.status === 'open').length;
                     return (
                       <button
                         key={table.id}
                         onClick={() => handleTableSelect(table)}
-                        className={`aspect-square border-2 flex items-center justify-center cursor-pointer transition-colors relative ${
+                        className={`aspect-square border-2 flex flex-col items-center justify-center cursor-pointer transition-colors relative ${
                           selectedTable?.id === table.id
                             ? 'border-[#ec2b25] bg-[#ec2b25] text-white'
-                            : hasOpenBill
+                            : openBillsCount > 0
                             ? 'border-orange-500 bg-orange-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
                         <span className="font-mono font-bold">{table.shortCode}</span>
-                        {hasOpenBill && selectedTable?.id !== table.id && (
-                          <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
+                        {openBillsCount > 0 && selectedTable?.id !== table.id && (
+                          <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                            {openBillsCount}
+                          </span>
                         )}
                       </button>
                     );
@@ -1134,6 +1160,17 @@ const BillingPage = () => {
                   <div className="mt-4 p-3 bg-gray-50 border border-gray-200">
                     <p className="text-sm text-gray-600">Selected Table:</p>
                     <p className="font-medium text-gray-900">{selectedTable.name} ({selectedTable.shortCode})</p>
+                    {displayBillId && (
+                      <div className="mt-2 pt-2 border-t border-gray-200">
+                        <p className="text-xs text-gray-500">Current Bill:</p>
+                        <p className="text-sm font-mono font-bold text-[#ec2b25]">{displayBillId}</p>
+                      </div>
+                    )}
+                    {!displayBillId && billItems.length > 0 && (
+                      <div className="mt-2 pt-2 border-t border-gray-200">
+                        <p className="text-xs text-orange-600 font-medium">New bill (not saved yet)</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1265,7 +1302,18 @@ const BillingPage = () => {
 
             {/* Column 3: Bill Summary */}
             <div>
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Bill Summary</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Bill Summary</h3>
+                {billType === 'dine-in' && selectedTable && (
+                  <button
+                    onClick={() => startNewBillForTable(selectedTable)}
+                    className="text-xs px-2 py-1 border border-[#ec2b25] text-[#ec2b25] hover:bg-[#ec2b25] hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" />
+                    New Bill
+                  </button>
+                )}
+              </div>
               
               <div className="space-y-2 max-h-64 md:max-h-80 overflow-y-auto mb-3 md:mb-4">
                 {billItems.length === 0 ? (
@@ -1824,6 +1872,97 @@ const BillingPage = () => {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Table Bills Selection Modal */}
+      {showTableBillsModal && pendingTable && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="bg-white w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="bg-gray-50 px-4 md:px-6 py-4 border-b-2 border-gray-200 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg md:text-xl font-bold text-gray-900">
+                  {pendingTable.name}
+                </h2>
+                <p className="text-xs md:text-sm text-gray-600 mt-1">
+                  {tableBills.length} open bill{tableBills.length !== 1 ? 's' : ''} found
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowTableBillsModal(false);
+                  setPendingTable(null);
+                  setTableBills([]);
+                }}
+                className="p-2 hover:bg-gray-200 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+            {/* Modal Body - List of Open Bills */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3">
+              {tableBills.map((bill, index) => (
+                <button
+                  key={bill.id}
+                  onClick={() => loadSpecificBill(bill, pendingTable)}
+                  className="w-full text-left border-2 border-gray-200 hover:border-[#ec2b25] transition-colors cursor-pointer"
+                >
+                  {/* Bill Header */}
+                  <div className="bg-gray-50 px-3 md:px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-bold text-gray-700">
+                        {bill.billId || `Bill ${index + 1}`}
+                      </span>
+                      <span className="px-2 py-0.5 bg-orange-500 text-white text-xs font-bold">
+                        OPEN
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      {new Date(bill.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  
+                  {/* Bill Items Preview */}
+                  <div className="px-3 md:px-4 py-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-gray-600">{bill.customerName || 'Guest'}</span>
+                      <span className="text-xs text-gray-600">{bill.items?.length || 0} items</span>
+                    </div>
+                    <div className="space-y-1 max-h-20 overflow-hidden">
+                      {bill.items?.slice(0, 3).map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between text-xs">
+                          <span className="text-gray-700 truncate flex-1">{item.name} x{item.quantity}</span>
+                          <span className="text-gray-900 font-medium ml-2">₹{(item.price * item.quantity).toFixed(0)}</span>
+                        </div>
+                      ))}
+                      {bill.items?.length > 3 && (
+                        <p className="text-xs text-gray-400">+{bill.items.length - 3} more items...</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Bill Total */}
+                  <div className="bg-gray-50 px-3 md:px-4 py-2 border-t border-gray-200 flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Total</span>
+                    <span className="text-base font-bold text-[#ec2b25]">₹{bill.total?.toFixed(2)}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Modal Footer - New Bill Button */}
+            <div className="px-4 md:px-6 py-4 border-t-2 border-gray-200 bg-gray-50">
+              <button
+                onClick={() => startNewBillForTable(pendingTable)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#ec2b25] text-white hover:bg-[#d12620] transition-colors cursor-pointer"
+              >
+                <Plus className="w-5 h-5" />
+                <span className="font-medium">Start New Bill</span>
+              </button>
             </div>
           </div>
         </div>
