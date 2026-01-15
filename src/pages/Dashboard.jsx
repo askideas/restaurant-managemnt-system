@@ -12,6 +12,7 @@ const Dashboard = () => {
     profitPercentage: 0,
     totalOrders: 0,
     totalBills: 0,
+    openBills: 0,
     cancelledOrders: 0,
     topSellingItems: [],
     periodRevenue: 0,
@@ -145,23 +146,29 @@ const Dashboard = () => {
       const allBills = billsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const bills = allBills.filter(bill => isDateInRange(bill.createdAt, startDate, endDate));
       
+      // Filter only paid bills for revenue calculation
+      const paidBills = bills.filter(bill => bill.status === 'paid');
+      
       // Fetch orders
       const ordersSnap = await getDocs(collection(db, 'orders'));
       const allOrders = ordersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const orders = allOrders.filter(order => isDateInRange(order.createdAt, startDate, endDate));
       
+      // Filter completed orders for revenue-related calculations
+      const completedOrders = orders.filter(order => order.status === 'completed');
+      
       // Fetch investments
       const investmentsSnap = await getDocs(collection(db, 'investments'));
       const allInvestments = investmentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const investments = allInvestments.filter(inv => isDateInRange(inv.date, startDate, endDate));
+      const investments = allInvestments.filter(inv => isDateInRange(inv.createdAt, startDate, endDate));
 
       // Fetch payrolls
       const payrollsSnap = await getDocs(collection(db, 'payrolls'));
       const allPayrolls = payrollsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       const payrolls = allPayrolls.filter(payroll => isDateInRange(payroll.createdAt, startDate, endDate));
 
-      // Calculate total revenue from bills
-      const totalRevenue = bills.reduce((sum, bill) => sum + (parseFloat(bill.total) || 0), 0);
+      // Calculate total revenue from PAID bills only
+      const totalRevenue = paidBills.reduce((sum, bill) => sum + (parseFloat(bill.total) || 0), 0);
       
       // Calculate total investment
       const totalInvestment = investments.reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
@@ -176,10 +183,13 @@ const Dashboard = () => {
 
       // Count cancelled orders
       const cancelledOrders = orders.filter(order => order.status === 'cancelled').length;
+      
+      // Count open (unpaid) bills
+      const openBills = bills.filter(bill => bill.status === 'open').length;
 
-      // Calculate top selling items
+      // Calculate top selling items from COMPLETED orders only
       const itemSales = {};
-      orders.forEach(order => {
+      completedOrders.forEach(order => {
         if (order.itemName) {
           if (!itemSales[order.itemName]) {
             itemSales[order.itemName] = {
@@ -189,7 +199,7 @@ const Dashboard = () => {
             };
           }
           itemSales[order.itemName].quantity += 1;
-          itemSales[order.itemName].revenue += parseFloat(order.price) || 0;
+          itemSales[order.itemName].revenue += parseFloat(order.subtotal) || parseFloat(order.price) || 0;
         }
       });
 
@@ -203,12 +213,13 @@ const Dashboard = () => {
         totalPayroll,
         profitLoss,
         profitPercentage,
-        totalOrders: orders.length,
-        totalBills: bills.length,
+        totalOrders: completedOrders.length,
+        totalBills: paidBills.length,
+        openBills,
         cancelledOrders,
         topSellingItems,
         periodRevenue: totalRevenue,
-        periodOrders: orders.length,
+        periodOrders: completedOrders.length,
       });
       setLoading(false);
     } catch (error) {
@@ -353,7 +364,7 @@ const Dashboard = () => {
           </div>
           <h3 className="text-gray-600 text-xs md:text-sm font-medium mb-1">Total Revenue</h3>
           <p className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
-          <p className="text-xs md:text-sm text-gray-500 mt-2">From {stats.totalBills} bills</p>
+          <p className="text-xs md:text-sm text-gray-500 mt-2">From {stats.totalBills} paid bills</p>
         </div>
 
         {/* Total Investment */}
@@ -424,13 +435,16 @@ const Dashboard = () => {
           <p className="text-xs text-gray-500 mt-1">{getFilterLabel()} Period</p>
         </div>
 
-        {/* Total Bills */}
+        {/* Paid Bills */}
         <div className="bg-white border-2 border-purple-200 p-4 md:p-6">
           <div className="flex items-center gap-2 md:gap-3 mb-2">
             <FileText className="w-4 md:w-5 h-4 md:h-5 text-purple-600" />
-            <h3 className="text-gray-600 text-xs md:text-sm font-medium">Total Bills</h3>
+            <h3 className="text-gray-600 text-xs md:text-sm font-medium">Paid Bills</h3>
           </div>
           <p className="text-xl md:text-2xl font-bold text-purple-600">{stats.totalBills}</p>
+          {stats.openBills > 0 && (
+            <p className="text-xs text-orange-600 mt-1 font-medium">{stats.openBills} unpaid bills</p>
+          )}
         </div>
 
         {/* Cancelled Orders */}

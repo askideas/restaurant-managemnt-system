@@ -71,8 +71,85 @@ const Investment = () => {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
+  // Calculate today's investment stats
+  const getInvestmentStats = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const todayInvestments = investments.filter(inv => {
+      if (!inv.createdAt) return false;
+      const invDate = new Date(inv.createdAt);
+      invDate.setHours(0, 0, 0, 0);
+      return invDate.getTime() === today.getTime();
+    });
+
+    const stats = {
+      total: { count: todayInvestments.length, amount: todayInvestments.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0) },
+      equipment: { count: 0, amount: 0 },
+      renovation: { count: 0, amount: 0 },
+      marketing: { count: 0, amount: 0 },
+      other: { count: 0, amount: 0 }
+    };
+
+    todayInvestments.forEach(inv => {
+      const amount = parseFloat(inv.amount) || 0;
+      if (inv.category === 'equipment') {
+        stats.equipment.count++;
+        stats.equipment.amount += amount;
+      } else if (inv.category === 'renovation') {
+        stats.renovation.count++;
+        stats.renovation.amount += amount;
+      } else if (inv.category === 'marketing') {
+        stats.marketing.count++;
+        stats.marketing.amount += amount;
+      } else {
+        stats.other.count++;
+        stats.other.amount += amount;
+      }
+    });
+
+    return stats;
+  };
+
+  const investmentStats = getInvestmentStats();
+
   return (
     <div className="space-y-6">
+      {/* Today's Investment Stats */}
+      <div className="bg-white border border-gray-200 p-3 md:p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm md:text-base font-bold text-gray-900">Today's Investment Summary</h2>
+          <span className="text-xs text-gray-500">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3">
+          <div className="bg-gray-50 border border-gray-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-gray-600 mb-1">Total</p>
+            <p className="text-lg md:text-xl font-bold text-gray-900">{investmentStats.total.count}</p>
+            <p className="text-xs md:text-sm text-gray-600">₹{investmentStats.total.amount.toFixed(0)}</p>
+          </div>
+          <div className="bg-blue-50 border border-blue-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-blue-600 mb-1">Equipment</p>
+            <p className="text-lg md:text-xl font-bold text-blue-700">{investmentStats.equipment.count}</p>
+            <p className="text-xs md:text-sm text-blue-600">₹{investmentStats.equipment.amount.toFixed(0)}</p>
+          </div>
+          <div className="bg-purple-50 border border-purple-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-purple-600 mb-1">Renovation</p>
+            <p className="text-lg md:text-xl font-bold text-purple-700">{investmentStats.renovation.count}</p>
+            <p className="text-xs md:text-sm text-purple-600">₹{investmentStats.renovation.amount.toFixed(0)}</p>
+          </div>
+          <div className="bg-orange-50 border border-orange-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-orange-600 mb-1">Marketing</p>
+            <p className="text-lg md:text-xl font-bold text-orange-700">{investmentStats.marketing.count}</p>
+            <p className="text-xs md:text-sm text-orange-600">₹{investmentStats.marketing.amount.toFixed(0)}</p>
+          </div>
+          <div className="bg-green-50 border border-green-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-green-600 mb-1">Other</p>
+            <p className="text-lg md:text-xl font-bold text-green-700">{investmentStats.other.count}</p>
+            <p className="text-xs md:text-sm text-green-600">₹{investmentStats.other.amount.toFixed(0)}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Header Section */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Investments</h1>

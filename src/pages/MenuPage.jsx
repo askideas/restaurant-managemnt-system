@@ -163,8 +163,55 @@ const MenuPage = () => {
     }
   };
 
+  // Calculate menu stats
+  const getMenuStats = () => {
+    return {
+      totalCategories: categories.length,
+      totalItems: items.length,
+      vegItems: items.filter(i => i.foodType === 'veg').length,
+      nonVegItems: items.filter(i => i.foodType === 'nonveg').length,
+      eggItems: items.filter(i => i.foodType === 'egg').length,
+      activeItems: items.filter(i => i.status !== 'inactive').length
+    };
+  };
+
+  const menuStats = getMenuStats();
+
   return (
     <div className="space-y-6">
+      {/* Menu Stats */}
+      <div className="bg-white border border-gray-200 p-3 md:p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm md:text-base font-bold text-gray-900">Menu Summary</h2>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
+          <div className="bg-blue-50 border border-blue-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-blue-600 mb-1">Categories</p>
+            <p className="text-lg md:text-xl font-bold text-blue-700">{menuStats.totalCategories}</p>
+          </div>
+          <div className="bg-gray-50 border border-gray-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-gray-600 mb-1">Total Items</p>
+            <p className="text-lg md:text-xl font-bold text-gray-900">{menuStats.totalItems}</p>
+          </div>
+          <div className="bg-green-50 border border-green-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-green-600 mb-1">Veg Items</p>
+            <p className="text-lg md:text-xl font-bold text-green-700">{menuStats.vegItems}</p>
+          </div>
+          <div className="bg-red-50 border border-red-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-red-600 mb-1">Non-Veg Items</p>
+            <p className="text-lg md:text-xl font-bold text-red-700">{menuStats.nonVegItems}</p>
+          </div>
+          <div className="bg-yellow-50 border border-yellow-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-yellow-600 mb-1">Egg Items</p>
+            <p className="text-lg md:text-xl font-bold text-yellow-700">{menuStats.eggItems}</p>
+          </div>
+          <div className="bg-purple-50 border border-purple-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-purple-600 mb-1">Active Items</p>
+            <p className="text-lg md:text-xl font-bold text-purple-700">{menuStats.activeItems}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">Menu Management</h1>

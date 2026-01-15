@@ -141,6 +141,31 @@ const Payroll = () => {
 
   return (
     <div className="space-y-6">
+      {/* This Month's Payroll Stats */}
+      <div className="bg-white border border-gray-200 p-3 md:p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm md:text-base font-bold text-gray-900">{months[selectedMonth]} {selectedYear} Payroll Summary</h2>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3">
+          <div className="bg-blue-50 border border-blue-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-blue-600 mb-1">Total Staff</p>
+            <p className="text-lg md:text-xl font-bold text-blue-700">{staff.length}</p>
+          </div>
+          <div className="bg-green-50 border border-green-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-green-600 mb-1">Paid Staff</p>
+            <p className="text-lg md:text-xl font-bold text-green-700">{payrolls.length}</p>
+          </div>
+          <div className="bg-yellow-50 border border-yellow-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-yellow-600 mb-1">Pending</p>
+            <p className="text-lg md:text-xl font-bold text-yellow-700">{staff.length - payrolls.length}</p>
+          </div>
+          <div className="bg-purple-50 border border-purple-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-purple-600 mb-1">Total Paid</p>
+            <p className="text-lg md:text-xl font-bold text-purple-700">₹{getTotalPayroll().toFixed(0)}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

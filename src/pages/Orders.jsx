@@ -80,8 +80,76 @@ const Orders = () => {
     }
   };
 
+  // Calculate today's order stats
+  const getOrderStats = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const todayOrders = orders.filter(order => {
+      if (!order.createdAt) return false;
+      const orderDate = new Date(order.createdAt);
+      orderDate.setHours(0, 0, 0, 0);
+      return orderDate.getTime() === today.getTime();
+    });
+
+    return {
+      total: todayOrders.length,
+      pending: todayOrders.filter(o => o.status === 'pending').length,
+      completed: todayOrders.filter(o => o.status === 'completed').length,
+      cancelled: todayOrders.filter(o => o.status === 'cancelled').length,
+      dineIn: todayOrders.filter(o => o.type === 'dine-in').length,
+      takeAway: todayOrders.filter(o => o.type === 'take-away').length,
+      swiggy: todayOrders.filter(o => o.type === 'swiggy').length,
+      zomato: todayOrders.filter(o => o.type === 'zomato').length,
+    };
+  };
+
+  const orderStats = getOrderStats();
+
   return (
     <div className="space-y-6">
+      {/* Today's Order Stats */}
+      <div className="bg-white border border-gray-200 p-3 md:p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm md:text-base font-bold text-gray-900">Today's Order Summary</h2>
+          <span className="text-xs text-gray-500">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 md:gap-3">
+          <div className="bg-gray-50 border border-gray-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-gray-600 mb-1">Total</p>
+            <p className="text-lg md:text-xl font-bold text-gray-900">{orderStats.total}</p>
+          </div>
+          <div className="bg-yellow-50 border border-yellow-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-yellow-600 mb-1">Pending</p>
+            <p className="text-lg md:text-xl font-bold text-yellow-700">{orderStats.pending}</p>
+          </div>
+          <div className="bg-green-50 border border-green-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-green-600 mb-1">Completed</p>
+            <p className="text-lg md:text-xl font-bold text-green-700">{orderStats.completed}</p>
+          </div>
+          <div className="bg-red-50 border border-red-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-red-600 mb-1">Cancelled</p>
+            <p className="text-lg md:text-xl font-bold text-red-700">{orderStats.cancelled}</p>
+          </div>
+          <div className="bg-blue-50 border border-blue-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-blue-600 mb-1">Dine In</p>
+            <p className="text-lg md:text-xl font-bold text-blue-700">{orderStats.dineIn}</p>
+          </div>
+          <div className="bg-purple-50 border border-purple-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-purple-600 mb-1">Take Away</p>
+            <p className="text-lg md:text-xl font-bold text-purple-700">{orderStats.takeAway}</p>
+          </div>
+          <div className="bg-orange-50 border border-orange-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-orange-600 mb-1">Swiggy</p>
+            <p className="text-lg md:text-xl font-bold text-orange-700">{orderStats.swiggy}</p>
+          </div>
+          <div className="bg-red-50 border border-red-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-red-600 mb-1">Zomato</p>
+            <p className="text-lg md:text-xl font-bold text-red-700">{orderStats.zomato}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">Orders</h1>

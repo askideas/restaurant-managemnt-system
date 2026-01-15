@@ -180,8 +180,56 @@ const Staff = () => {
     }
   };
 
+  // Calculate staff stats
+  const getStaffStats = () => {
+    const accessCounts = {};
+    MENU_ITEMS.forEach(item => {
+      accessCounts[item.value] = staffList.filter(s => s.access?.includes(item.value)).length;
+    });
+    
+    return {
+      total: staffList.length,
+      accessCounts
+    };
+  };
+
+  const staffStats = getStaffStats();
+
   return (
     <div className="space-y-6">
+      {/* Staff Stats */}
+      <div className="bg-white border border-gray-200 p-3 md:p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm md:text-base font-bold text-gray-900">Staff Summary</h2>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3">
+          <div className="bg-gray-50 border border-gray-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-gray-600 mb-1">Total Staff</p>
+            <p className="text-lg md:text-xl font-bold text-gray-900">{staffStats.total}</p>
+          </div>
+          <div className="bg-blue-50 border border-blue-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-blue-600 mb-1">Dashboard</p>
+            <p className="text-lg md:text-xl font-bold text-blue-700">{staffStats.accessCounts['dashboard'] || 0}</p>
+          </div>
+          <div className="bg-green-50 border border-green-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-green-600 mb-1">Billing</p>
+            <p className="text-lg md:text-xl font-bold text-green-700">{staffStats.accessCounts['billing'] || 0}</p>
+          </div>
+          <div className="bg-purple-50 border border-purple-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-purple-600 mb-1">Orders</p>
+            <p className="text-lg md:text-xl font-bold text-purple-700">{staffStats.accessCounts['orders'] || 0}</p>
+          </div>
+          <div className="bg-orange-50 border border-orange-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-orange-600 mb-1">Menu</p>
+            <p className="text-lg md:text-xl font-bold text-orange-700">{staffStats.accessCounts['menu'] || 0}</p>
+          </div>
+          <div className="bg-red-50 border border-red-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-red-600 mb-1">Tables</p>
+            <p className="text-lg md:text-xl font-bold text-red-700">{staffStats.accessCounts['tables'] || 0}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">Staff Management</h1>

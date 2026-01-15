@@ -154,8 +154,55 @@ const TablesPage = () => {
     ? tables 
     : tables.filter(table => table.floorId === selectedFloor);
 
+  // Calculate table stats
+  const getTableStats = () => {
+    const floorStats = floors.map(floor => ({
+      id: floor.id,
+      name: floor.shortCode,
+      count: tables.filter(t => t.floorId === floor.id).length,
+      capacity: tables.filter(t => t.floorId === floor.id).reduce((sum, t) => sum + (t.capacity || 0), 0)
+    }));
+    
+    return {
+      totalFloors: floors.length,
+      totalTables: tables.length,
+      totalCapacity: tables.reduce((sum, t) => sum + (t.capacity || 0), 0),
+      floorStats
+    };
+  };
+
+  const tableStats = getTableStats();
+
   return (
     <div className="space-y-6">
+      {/* Tables Stats */}
+      <div className="bg-white border border-gray-200 p-3 md:p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm md:text-base font-bold text-gray-900">Tables Summary</h2>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
+          <div className="bg-blue-50 border border-blue-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-blue-600 mb-1">Total Floors</p>
+            <p className="text-lg md:text-xl font-bold text-blue-700">{tableStats.totalFloors}</p>
+          </div>
+          <div className="bg-gray-50 border border-gray-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-gray-600 mb-1">Total Tables</p>
+            <p className="text-lg md:text-xl font-bold text-gray-900">{tableStats.totalTables}</p>
+          </div>
+          <div className="bg-green-50 border border-green-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-green-600 mb-1">Total Capacity</p>
+            <p className="text-lg md:text-xl font-bold text-green-700">{tableStats.totalCapacity}</p>
+          </div>
+          {tableStats.floorStats.slice(0, 3).map(floor => (
+            <div key={floor.id} className="bg-purple-50 border border-purple-200 p-2 md:p-3 text-center">
+              <p className="text-xs text-purple-600 mb-1">{floor.name} Tables</p>
+              <p className="text-lg md:text-xl font-bold text-purple-700">{floor.count}</p>
+              <p className="text-[10px] text-purple-500">Cap: {floor.capacity}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">Tables Management</h1>

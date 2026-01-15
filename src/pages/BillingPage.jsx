@@ -40,6 +40,17 @@ const BillingPage = () => {
   const [totalBills, setTotalBills] = useState(0);
   const [lastVisible, setLastVisible] = useState(null);
 
+  // Billing Stats
+  const [billStats, setBillStats] = useState({
+    total: { count: 0, amount: 0 },
+    dineIn: { count: 0, amount: 0 },
+    takeAway: { count: 0, amount: 0 },
+    swiggy: { count: 0, amount: 0 },
+    zomato: { count: 0, amount: 0 },
+    paid: { count: 0, amount: 0 },
+    open: { count: 0, amount: 0 }
+  });
+
   // Payment Modal States
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cash');
@@ -58,7 +69,70 @@ const BillingPage = () => {
     fetchItems();
     fetchBills();
     fetchTotalBillsCount();
+    fetchBillStats();
   }, []);
+
+  // Fetch bill statistics for today
+  const fetchBillStats = async () => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayISO = today.toISOString();
+
+      const querySnapshot = await getDocs(collection(db, 'bills'));
+      const allBills = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Filter today's bills
+      const todayBills = allBills.filter(bill => {
+        if (!bill.createdAt) return false;
+        const billDate = new Date(bill.createdAt);
+        billDate.setHours(0, 0, 0, 0);
+        return billDate.getTime() === today.getTime();
+      });
+
+      const stats = {
+        total: { count: todayBills.length, amount: todayBills.reduce((sum, b) => sum + (parseFloat(b.total) || 0), 0) },
+        dineIn: { count: 0, amount: 0 },
+        takeAway: { count: 0, amount: 0 },
+        swiggy: { count: 0, amount: 0 },
+        zomato: { count: 0, amount: 0 },
+        paid: { count: 0, amount: 0 },
+        open: { count: 0, amount: 0 }
+      };
+
+      todayBills.forEach(bill => {
+        const amount = parseFloat(bill.total) || 0;
+        
+        // By type
+        if (bill.type === 'dine-in') {
+          stats.dineIn.count++;
+          stats.dineIn.amount += amount;
+        } else if (bill.type === 'take-away') {
+          stats.takeAway.count++;
+          stats.takeAway.amount += amount;
+        } else if (bill.type === 'swiggy') {
+          stats.swiggy.count++;
+          stats.swiggy.amount += amount;
+        } else if (bill.type === 'zomato') {
+          stats.zomato.count++;
+          stats.zomato.amount += amount;
+        }
+
+        // By status
+        if (bill.status === 'paid') {
+          stats.paid.count++;
+          stats.paid.amount += amount;
+        } else if (bill.status === 'open') {
+          stats.open.count++;
+          stats.open.amount += amount;
+        }
+      });
+
+      setBillStats(stats);
+    } catch (error) {
+      console.error('Error fetching bill stats:', error);
+    }
+  };
 
   const fetchFloors = async () => {
     try {
@@ -627,6 +701,7 @@ const BillingPage = () => {
       setSavedDiscount(discount); // Apply discount after save
       fetchBills(1);
       fetchTotalBillsCount();
+      fetchBillStats();
       
       toast.success(`Changes saved successfully!`);
     } catch (error) {
@@ -715,6 +790,7 @@ const BillingPage = () => {
       resetBillForm();
       fetchBills(1);
       fetchTotalBillsCount();
+      fetchBillStats();
     } catch (error) {
       console.error('Error completing payment:', error);
       toast.error('Failed to complete payment');
@@ -759,6 +835,7 @@ const BillingPage = () => {
       toast.success('All orders cancelled successfully');
       resetBillForm();
       fetchBills(1);
+      fetchBillStats();
     } catch (error) {
       console.error('Error cancelling orders:', error);
       toast.error('Failed to cancel orders');
@@ -837,6 +914,58 @@ const BillingPage = () => {
 
   return (
     <div className="space-y-4 md:space-y-6">
+      {/* Today's Billing Stats */}
+      <div className="bg-white border border-gray-200 p-3 md:p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm md:text-base font-bold text-gray-900">Today's Billing Summary</h2>
+          <span className="text-xs text-gray-500">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3">
+          {/* Total */}
+          <div className="bg-gray-50 border border-gray-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-gray-600 mb-1">Total Bills</p>
+            <p className="text-lg md:text-xl font-bold text-gray-900">{billStats.total.count}</p>
+            <p className="text-xs md:text-sm text-gray-600">₹{billStats.total.amount.toFixed(0)}</p>
+          </div>
+          {/* Dine In */}
+          <div className="bg-blue-50 border border-blue-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-blue-600 mb-1">Dine In</p>
+            <p className="text-lg md:text-xl font-bold text-blue-700">{billStats.dineIn.count}</p>
+            <p className="text-xs md:text-sm text-blue-600">₹{billStats.dineIn.amount.toFixed(0)}</p>
+          </div>
+          {/* Take Away */}
+          <div className="bg-purple-50 border border-purple-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-purple-600 mb-1">Take Away</p>
+            <p className="text-lg md:text-xl font-bold text-purple-700">{billStats.takeAway.count}</p>
+            <p className="text-xs md:text-sm text-purple-600">₹{billStats.takeAway.amount.toFixed(0)}</p>
+          </div>
+          {/* Swiggy */}
+          <div className="bg-orange-50 border border-orange-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-orange-600 mb-1">Swiggy</p>
+            <p className="text-lg md:text-xl font-bold text-orange-700">{billStats.swiggy.count}</p>
+            <p className="text-xs md:text-sm text-orange-600">₹{billStats.swiggy.amount.toFixed(0)}</p>
+          </div>
+          {/* Zomato */}
+          <div className="bg-red-50 border border-red-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-red-600 mb-1">Zomato</p>
+            <p className="text-lg md:text-xl font-bold text-red-700">{billStats.zomato.count}</p>
+            <p className="text-xs md:text-sm text-red-600">₹{billStats.zomato.amount.toFixed(0)}</p>
+          </div>
+          {/* Paid */}
+          <div className="bg-green-50 border border-green-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-green-600 mb-1">Paid</p>
+            <p className="text-lg md:text-xl font-bold text-green-700">{billStats.paid.count}</p>
+            <p className="text-xs md:text-sm text-green-600">₹{billStats.paid.amount.toFixed(0)}</p>
+          </div>
+          {/* Open/Unpaid */}
+          <div className="bg-yellow-50 border border-yellow-200 p-2 md:p-3 text-center">
+            <p className="text-xs text-yellow-600 mb-1">Unpaid</p>
+            <p className="text-lg md:text-xl font-bold text-yellow-700">{billStats.open.count}</p>
+            <p className="text-xs md:text-sm text-yellow-600">₹{billStats.open.amount.toFixed(0)}</p>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-xl md:text-2xl font-bold text-gray-900">Billing</h1>
