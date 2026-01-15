@@ -31,6 +31,8 @@ const BillingPage = () => {
   const [discount, setDiscount] = useState(0);
   const [platformOrderId, setPlatformOrderId] = useState('');
   const [showPlatformModal, setShowPlatformModal] = useState(false);
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState(null);
   
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
@@ -196,22 +198,41 @@ const BillingPage = () => {
             : bi
         );
       } else {
-        return [...prev, { ...item, quantity: 1, kotSent: false, pendingKotQty: 1 }];
+        return [...prev, { 
+          ...item, 
+          quantity: 1, 
+          kotSent: false, 
+          pendingKotQty: 1,
+          originalQuantity: 0  // Track original quantity from saved orders
+        }];
       }
     });
   };
 
-  // Update item quantity
+  // Update item quantity (Plus/Minus buttons in bill summary)
   const updateQuantity = (itemId, delta) => {
     setBillItems(prevItems => prevItems.map(bi => {
       if (bi.id === itemId) {
         const newQty = bi.quantity + delta;
-        const newPending = (bi.pendingKotQty || 0) + (delta > 0 ? delta : Math.max(delta, -((bi.pendingKotQty || 0))));
-        if (newQty <= 0) return null;
-        return { ...bi, quantity: newQty, pendingKotQty: Math.max(0, newPending) };
+        if (newQty <= 0) {
+          // Show confirmation modal instead of removing directly
+          setItemToRemove(bi);
+          setShowRemoveModal(true);
+          return bi; // Keep the item for now
+        }
+        // Update pendingKotQty based on change from original quantity
+        const originalQty = bi.originalQuantity || 0;
+        const newPendingQty = newQty - originalQty;
+        return { ...bi, quantity: newQty, pendingKotQty: newPendingQty };
       }
       return bi;
-    }).filter(Boolean));
+    }));
+  };
+
+  // Show remove confirmation modal
+  const handleRemoveClick = (item) => {
+    setItemToRemove(item);
+    setShowRemoveModal(true);
   };
 
   // Remove item from bill
@@ -373,24 +394,32 @@ const BillingPage = () => {
 
     setSaving(true);
     try {
-      // Only send pendingKotQty > 0
-      const itemsToOrder = billItems.filter(item => (item.pendingKotQty || 0) > 0);
-      if (itemsToOrder.length === 0) {
-        toast.error('No new items to send to KOT');
+      // Filter items with quantity changes (positive = add, negative = reduce/remove)
+      const itemsWithChanges = billItems.filter(item => {
+        const pendingQty = item.pendingKotQty || 0;
+        return pendingQty !== 0;
+      });
+
+      if (itemsWithChanges.length === 0) {
+        toast.error('No changes to save');
         setSaving(false);
         return;
       }
 
+      // Separate items to add vs items to reduce
+      const itemsToAdd = itemsWithChanges.filter(item => (item.pendingKotQty || 0) > 0);
+      const itemsToReduce = itemsWithChanges.filter(item => (item.pendingKotQty || 0) < 0);
+
       let updatedItemsWithOrders;
       
-      // For Dine In: Create individual order for each item
+      // For Dine In: Create individual order for each item with positive changes, cancel orders for reduced items
       if (billType === 'dine-in') {
         updatedItemsWithOrders = await Promise.all(billItems.map(async (item) => {
           if ((item.pendingKotQty || 0) > 0) {
-            // Generate unique order ID for this item
+            // Add new quantity - Generate unique order ID for this item
             const orderId = await generateOrderId();
             
-            // Create order for this specific item
+            // Create order for this specific item (only the new quantity)
             const orderPayload = {
               orderId: orderId,
               billDocId: currentBillId || 'pending',
@@ -414,61 +443,124 @@ const BillingPage = () => {
             
             const orderDoc = await addDoc(collection(db, 'orders'), orderPayload);
             
-            // Return item with order ID attached
+            // Return item with order ID attached and reset pendingKotQty
             return {
               ...item,
               kotSent: true,
               pendingKotQty: 0,
+              originalQuantity: item.quantity, // Update original quantity
               orderIds: [...(item.orderIds || []), { orderId: orderId, orderDocId: orderDoc.id, quantity: item.pendingKotQty }]
             };
+          } else if ((item.pendingKotQty || 0) < 0) {
+            // Reduce quantity - Cancel orders for the reduced quantity
+            const quantityToReduce = Math.abs(item.pendingKotQty);
+            let remainingToCancel = quantityToReduce;
+            const updatedOrderIds = [];
+            
+            // Cancel orders from the end (most recent first)
+            if (item.orderIds && item.orderIds.length > 0) {
+              for (let i = item.orderIds.length - 1; i >= 0 && remainingToCancel > 0; i--) {
+                const order = item.orderIds[i];
+                if (order.quantity <= remainingToCancel) {
+                  // Cancel entire order
+                  await updateDoc(doc(db, 'orders', order.orderDocId), {
+                    status: 'cancelled',
+                    updatedAt: new Date().toISOString()
+                  });
+                  remainingToCancel -= order.quantity;
+                  // Don't add to updatedOrderIds - this order is cancelled
+                } else {
+                  // Partially reduce this order
+                  const newQuantity = order.quantity - remainingToCancel;
+                  await updateDoc(doc(db, 'orders', order.orderDocId), {
+                    quantity: newQuantity,
+                    subtotal: item.price * newQuantity,
+                    total: item.price * newQuantity,
+                    updatedAt: new Date().toISOString()
+                  });
+                  updatedOrderIds.unshift({
+                    ...order,
+                    quantity: newQuantity
+                  });
+                  remainingToCancel = 0;
+                }
+              }
+              
+              // Add back any orders that weren't cancelled (orders before the cancelled ones)
+              for (let i = 0; i < item.orderIds.length && remainingToCancel === 0; i++) {
+                const order = item.orderIds[i];
+                // Check if this order wasn't already processed (not in updatedOrderIds)
+                if (!updatedOrderIds.find(o => o.orderDocId === order.orderDocId)) {
+                  updatedOrderIds.unshift(order);
+                }
+              }
+            }
+            
+            return {
+              ...item,
+              pendingKotQty: 0,
+              originalQuantity: item.quantity,
+              orderIds: updatedOrderIds
+            };
           }
-          return item;
+          // Reset pendingKotQty for unchanged items
+          return { ...item, pendingKotQty: 0, originalQuantity: item.quantity };
         }));
       } else {
-        // For Takeaway, Swiggy, Zomato: Create ONE order with all items
-        const orderId = await generateOrderId();
-        
-        // Calculate total for all items
-        const orderTotal = itemsToOrder.reduce((sum, item) => sum + (item.price * item.pendingKotQty), 0);
-        
-        const orderPayload = {
-          orderId: orderId,
-          billDocId: currentBillId || 'pending',
-          customerName: customerName || 'Guest',
-          items: itemsToOrder.map(item => ({
-            itemId: item.id,
-            itemName: item.name,
-            itemPrice: item.price,
-            quantity: item.pendingKotQty
-          })),
-          subtotal: orderTotal,
-          total: orderTotal,
-          status: 'pending',
-          type: billType,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        
-        // Add platform order ID for Swiggy/Zomato
-        if (billType === 'swiggy' || billType === 'zomato') {
-          orderPayload.platformOrderId = platformOrderId;
-          orderPayload.platform = billType;
-        }
-        
-        const orderDoc = await addDoc(collection(db, 'orders'), orderPayload);
-        
-        // Update all items with the same order ID
-        updatedItemsWithOrders = billItems.map(item => {
-          if ((item.pendingKotQty || 0) > 0) {
-            return {
-              ...item,
-              kotSent: true,
-              pendingKotQty: 0,
-              orderIds: [...(item.orderIds || []), { orderId: orderId, orderDocId: orderDoc.id, quantity: item.pendingKotQty }]
-            };
+        // For Takeaway, Swiggy, Zomato: Create ONE order with all items that have positive changes
+        if (itemsToAdd.length > 0) {
+          const orderId = await generateOrderId();
+          
+          // Calculate total for items to add
+          const orderTotal = itemsToAdd.reduce((sum, item) => sum + (item.price * Math.abs(item.pendingKotQty)), 0);
+          
+          const orderPayload = {
+            orderId: orderId,
+            billDocId: currentBillId || 'pending',
+            customerName: customerName || 'Guest',
+            items: itemsToAdd.map(item => ({
+              itemId: item.id,
+              itemName: item.name,
+              itemPrice: item.price,
+              quantity: Math.abs(item.pendingKotQty)
+            })),
+            subtotal: orderTotal,
+            total: orderTotal,
+            status: 'pending',
+            type: billType,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          
+          // Add platform order ID for Swiggy/Zomato
+          if (billType === 'swiggy' || billType === 'zomato') {
+            orderPayload.platformOrderId = platformOrderId;
+            orderPayload.platform = billType;
           }
-          return item;
-        });
+          
+          const orderDoc = await addDoc(collection(db, 'orders'), orderPayload);
+          
+          // Update all items with the same order ID and reset pendingKotQty
+          updatedItemsWithOrders = billItems.map(item => {
+            if ((item.pendingKotQty || 0) > 0) {
+              return {
+                ...item,
+                kotSent: true,
+                pendingKotQty: 0,
+                originalQuantity: item.quantity,
+                orderIds: [...(item.orderIds || []), { orderId: orderId, orderDocId: orderDoc.id, quantity: item.pendingKotQty }]
+              };
+            }
+            return { ...item, pendingKotQty: 0, originalQuantity: item.quantity };
+          });
+        } else {
+          // No items to add, just reset pendingKotQty
+          updatedItemsWithOrders = billItems.map(item => ({
+            ...item,
+            pendingKotQty: 0,
+            originalQuantity: item.quantity
+          }));
+        }
       }
 
       const subtotal = calculateSubtotal();
@@ -525,7 +617,7 @@ const BillingPage = () => {
       fetchBills(1);
       fetchTotalBillsCount();
       
-      toast.success(`${itemsToOrder.length} order(s) sent to KOT!`);
+      toast.success(`Changes saved successfully!`);
     } catch (error) {
       console.error('Error saving bill:', error);
       toast.error('Failed to save bill');
@@ -996,8 +1088,9 @@ const BillingPage = () => {
                           )}
                         </div>
                         <button
-                          onClick={() => removeItemFromBill(item.id)}
+                          onClick={() => handleRemoveClick(item)}
                           className="p-1 hover:bg-red-50 text-red-600 cursor-pointer"
+                          title="Remove item"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -1275,6 +1368,55 @@ const BillingPage = () => {
           </>
         )}
       </div>
+
+      {/* Remove Item Confirmation Modal */}
+      {showRemoveModal && itemToRemove && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                Remove Item
+              </h2>
+              <p className="text-sm text-gray-600">
+                Are you sure you want to remove all quantity of this item from the bill?
+              </p>
+            </div>
+
+            <div className="bg-gray-50 border border-gray-200 p-4 mb-4">
+              <div className="font-medium text-gray-900">{itemToRemove.name}</div>
+              <div className="text-sm text-gray-600 mt-1">
+                Quantity: <span className="font-bold">{itemToRemove.quantity}</span>
+              </div>
+              <div className="text-sm text-gray-600">
+                Total: <span className="font-bold">₹{(itemToRemove.price * itemToRemove.quantity).toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowRemoveModal(false);
+                  setItemToRemove(null);
+                }}
+                className="flex-1 px-4 py-2 border-2 border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  await removeItemFromBill(itemToRemove.id);
+                  setShowRemoveModal(false);
+                  setItemToRemove(null);
+                }}
+                className="flex-1 px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors"
+              >
+                Yes, Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Platform Order ID Modal (Swiggy/Zomato) */}
       {showPlatformModal && (
